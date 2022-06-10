@@ -11,7 +11,7 @@ from math import floor
 from os import listdir
 import copy
 import glob
-## import tightBinding as tbi
+# import tightBinding as tbi
 
     
     
@@ -50,3 +50,4 @@ def loadFile(filePath):
 def loadMol(folder):
     # moleculesList = loadMol("C:/Users/username/*/hop-field/Molecular Structure Data/*.mol2")
     return([loadFile(filename) for filename in glob.glob(folder)])
+

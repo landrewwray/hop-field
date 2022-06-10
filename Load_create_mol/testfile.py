@@ -11,6 +11,9 @@ from math import floor
 from os import listdir
 import copy
 import Load_mol as lm
+import distort_mol as dm
 
 atoms_list, coords_arry, bonds_arry = lm.loadFile("C:/Users/danie/OneDrive/Documents/GitHub/hop-field/Molecular Structure Data/(5)Helicene(C22H14).mol2")
 moleculesList = lm.loadMol("C:/Users/danie/OneDrive/Documents/GitHub/hop-field/Molecular Structure Data/*.mol2")
+
+#newCoordsList = dm.distortionList(coords_arry, bonds_arry, np.arange(len(atoms_list)))
