@@ -48,6 +48,12 @@ def loadFile(filePath):
     return atoms_list, coords_arry, bonds_arry
 
 def loadMol(folder):
-    # moleculesList = loadMol("C:/Users/username/*/hop-field/Molecular Structure Data/*.mol2")
-    return([loadFile(filename) for filename in glob.glob(folder)])
+    # atomsLists, bondsArrays, coordsArrays = loadMol("C:/Users/username/*/hop-field/Molecular Structure Data/*.mol2")
+    moleculesList = [loadFile(filename) for filename in glob.glob(folder)]
+    
+    atomsLists = [molecule[0] for molecule in moleculesList]
+    bondsArrays = [molecule[1] for molecule in moleculesList]
+    coordsArrays = [molecule[2] for molecule in moleculesList]
+    
+    return(atomsLists, bondsArrays, coordsArrays)
 
