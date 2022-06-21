@@ -13,11 +13,15 @@ import copy
 import Load_mol as lm
 import distort_mol as dm
 import config_wrapper as cw
+import random
 
 atoms_list, coords_arry, bonds_arry = lm.loadFile("C:/Users/danie/OneDrive/Documents/GitHub/hop-field/Molecular Structure Data/(5)Helicene(C22H14).mol2")
 atomsLists, bondsArrays, coordsArrays = lm.loadMol("C:/Users/danie/OneDrive/Documents/GitHub/hop-field/Molecular Structure Data/*.mol2")
 
-distortList = make1MolDistortions(coords_arry, bonds_arry, len(bonds_arry)/2)
+distortList = cw.make1MolDistortions(atomsLists[0], coordsArrays[0], bondsArrays[0], 10, random.sample(
+            list(range(bonds_arry.shape[0])), 10
+        ))
 
-distortionsLists = 
-#newCoordsList = dm.distortionList(coords_arry, bonds_arry, np.arange(len(atoms_list)))
+
+distortionsLists = cw.allMolDistortions("C:/Users/danie/OneDrive/Documents/GitHub/hop-field/Molecular Structure Data/*.mol2")
+# newCoordsList = dm.distortionList(coords_arry, bonds_arry, np.arange(len(atoms_list)))

@@ -15,7 +15,7 @@ import copy
 ##### bond distortion functions ######
 
 
-def distort_bond(theCoords, _theBonds_, bondNum, distortDist=0.01, distortAxis=[]):
+def distort_bond(theCoords, _theBonds_, bondNum, distortDist, distortAxis=[]):
     """*** tested, but buckling distortions not well examined
     
     Shift the 2nd atom listed in a given bond, and return both the new coordinate and the distortion vector
@@ -62,7 +62,7 @@ def distort_bond(theCoords, _theBonds_, bondNum, distortDist=0.01, distortAxis=[
 
 
 def distort_molecule(
-    theCoords, theBonds, bondNum, fixPosSet=set(), distortDist=0.01, distortAxis=[]
+    theCoords, theBonds, bondNum, distortDist, fixPosSet=set(),  distortAxis=[]
 ):
     """*** tested for several scenarios
     

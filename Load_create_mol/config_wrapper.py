@@ -42,17 +42,17 @@ def make1MolDistortions(atoms_list, coords_arry, bonds_arry, numDistort, chosenB
     for bond in chosenBonds:
 
         chosenAxis = np.random.rand(3)  # chosenAxis will be different for each bond
-        newCoordsBucklePlus = distort_molecule(
+        newCoordsBucklePlus = dm.distort_molecule(
             coords_arry, bonds_arry, bond, buckleDist, chosenAxis
         )
-        newCoordsBuckleMinus = distort_molecule(
+        newCoordsBuckleMinus = dm.distort_molecule(
             coords_arry, bonds_arry, bond, buckleDist * -1, chosenAxis
         )
-        newCoordsStretchPlus = distort_molecule(
-            coords_arry, bonds_arry, bond, stretchDist, []
+        newCoordsStretchPlus = dm.distort_molecule(
+            coords_arry, bonds_arry, bond, stretchDist
         )
-        newCoordsStretchMinus = distort_molecule(
-            coords_arry, bonds_arry, bond, stretchDist * -1, []
+        newCoordsStretchMinus = dm.distort_molecule(
+            coords_arry, bonds_arry, bond, stretchDist * -1
         )
         distortList += [
             [
@@ -102,7 +102,7 @@ def allMolDistortions(path):
     atomsLists, bondsArrays, coordsArrays = lm.loadMol(path)
     distortionLists = []
 
-    for index in range(atomsLists):
+    for index in range(len(atomsLists)):
         chosenBonds = random.sample(
             list(range(bondsArrays[index].shape[0])), numDistort
         )

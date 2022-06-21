@@ -52,8 +52,8 @@ def loadMol(folder):
     moleculesList = [loadFile(filename) for filename in glob.glob(folder)]
     
     atomsLists = [molecule[0] for molecule in moleculesList]
-    bondsArrays = [molecule[1] for molecule in moleculesList]
-    coordsArrays = [molecule[2] for molecule in moleculesList]
+    coordsArrays = [molecule[1] for molecule in moleculesList]
+    bondsArrays = [molecule[2] for molecule in moleculesList]
     
     return(atomsLists, bondsArrays, coordsArrays)
 
