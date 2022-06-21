@@ -15,7 +15,7 @@ Develpment notes (Jun 15 2022):
 
 @author: lawray
 """
-import sigmoidcurve as sc
+import universalmodel.sigmoidcurve as sc
 
 
 def findAt(filePath):
@@ -150,7 +150,7 @@ class UniversalModel:
         orbSymList=[]
         for nextTerm in theList:
             self.termsList += [Hterm(self.elementList[0],[nextTerm])]
-            orbSymList+=[nextTerm[0]]
+            orbSymList+=[[nextTerm[0], int(nextTerm[4])]]
         self.orbSyms = [orbSymList]
 
     def makeCrossTerms(self,allowedTypes,termFile):
