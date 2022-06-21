@@ -19,11 +19,11 @@ class ConfigTerms:
         """
         
         self.UM = theUM  # to remember they types of Hamiltonian terms
-        self.electronNums=self.getElNums()
+        self.electronNums=self.getElNums(theConfigsWrapper)  #***
         
         
         self.MElists=[]
-        for configPl in range(theConfigsWrapper.theConfigs): # ***fix the list name!
+        for configPl in range(len(theConfigsWrapper.theConfigs)): # ***fix the list name!
             self.MElists += self.makeMElist(theConfigsWrapper,configPl)
             
             
@@ -33,11 +33,13 @@ class ConfigTerms:
         #note that config is a set of 5 slightly different coordinate sets
         
         # 1. first define the initial Hamiltonian index for each [atom][orbital] (list of lists of integers)
-        #    -- this needs a separate function
+        #    -- this needs a separate function -- give 's'-orbitals 1 index, 'p': 3 indices
+        #    -- reference "theUM.orbSyms[elementNumber]" for the orbital symmetry
+        #    -- and number of orbitals, as theUM.orbSyms[elementNumber]==['s',1] or ['p',3]
         
         #***
         
-        # 2. next loop through the UM terms and identify a list of pairs for each
+        # 2. next loop through the UM terms (theUM.termsList) and identify a list of pairs for each
         # (this is addressed by the 'ConfigTerms.findPairs' function below, 
         # but one needs the specific maxDist for each UM term)
         
@@ -52,7 +54,7 @@ class ConfigTerms:
         # if theUM.termsList[theTermNum].element1==None --> it's a single-atom term
         # otherwise check theUM.termsList[theTermNum].hop (True/False) to see if it's a hopping term
         
-        #*** the returned list will look like matsList[distortionNum][distortionTypeNum][HmatListNum] = np.asarray[[sOrbIndUp, sOrbIndUp, E_s], [sOrbIndUp+1, sOrbIndUp+1, E_s]]
+        #*** the returned list will look like matsList[distortionNum][distortionTypeNum][HmatListNum] = np.asarray[[sOrbInd, sOrbInd, E_s]]
         
     def findPairs(self, maxDist):
         #this function is coppied from my old code
@@ -66,11 +68,14 @@ class ConfigTerms:
                 if theDist <= maxDist:
                     self.pairs_list+=[[ii,jj,theDist]]    
     
-    def getElNums(self):
+    def getElNums(self, theConfigsWrapper):
         """Uses the universal model and configs to generate a list of electron number for each configuration.
-        This will reference UM.electronsPerAtom and UM.elementList
+        This will reference self.UM.electronsPerAtom and self.UM.elementList
         
+        Returns a list of electron number for each configuration.
         """
+        #***
+        
         
     def save(self,fileName):
         pass
