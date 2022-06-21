@@ -1,0 +1,8 @@
+@Hopping terms 
+X sigma s s 2 1 3 0.5 3 5
+X sigma p s 2 1 3 0.5 3 5
+X sigma p p -2 -3 -1 0.5 3 5
+X pi p p 2 1 3 0.5 3 5
+
+# Interatomic terms arguments are: 
+# [atom interacted with ('X' means any)] [hop symmetry] [my orbital] [neighbor orbital] [initial energy at min radius] [min energy] [max energy] [min dist (Angstroms)] [max dist (Angstroms)] [number of sigmoids]
