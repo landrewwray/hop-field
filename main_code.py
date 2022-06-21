@@ -7,7 +7,7 @@ Created on Tue Jun 14 07:03:08 2022
 """
 import universalmodel.universalmodel as um
 # import load_create_mol as lcm #***
-# import hmat_stitcher.make_mat_lists as mkLst
+# import hmat_stitcher.hmat_stitcher as stitch
 
 #1. code to load and create molecule --> molConfigList
 
@@ -18,9 +18,9 @@ theUM += um.UniversalModel(['H','Hinit_0.txt'])
 theUM.makeCrossTerms(['all'],'Hop_generic0.txt')
 
 # #3. create the matrices
-# configMats=mkLst.ConfigTerms(theUM,molConfigList)
-# configMats.save('trial1')
-# configMats.makeHmats(theUM)
+# configMats=stitch.ConfigTerms(theUM,molConfigList)
+# configMats.save('trial1')  #also need configMats.load(fileName)
+# configMats.makeHmats(theUM)  #create the Hmats for a parthticular UM
 
 # #4. Now for Monte Carlo!
 
