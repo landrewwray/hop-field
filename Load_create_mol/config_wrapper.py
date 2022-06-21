@@ -11,8 +11,8 @@ import pandas as pd
 from math import floor
 from os import listdir
 import copy
-import Load_mol as lm
-import distort_mol as dm
+import load_create_mol.load_mol as lm
+import load_create_mol.distort_mol as dm
 
 
 def make1MolDistortions(atoms_list, coords_arry, bonds_arry, numDistort, chosenBonds):
@@ -98,11 +98,12 @@ def allMolDistortions(path):
 
     """
 
-    numDistort = 10
     atomsLists, bondsArrays, coordsArrays = lm.loadMol(path)
+    
     distortionLists = []
 
     for index in range(len(atomsLists)):
+        numDistort = (bondsArrays[index].shape[0])//2
         chosenBonds = random.sample(
             list(range(bondsArrays[index].shape[0])), numDistort
         )
@@ -129,9 +130,10 @@ class ConfigWrapper:
     A sample call would go here, or possibly a sample class init
     """
 
-    def __init__(self, distortLists=[], atomsLists=[], bondsArrays=[], coordsArrays=[]):
+    def __init__(self, distortLists=[], atomsLists=[], elementsLists=[], bondsArrays=[], coordsArrays=[]):
         self.distortLists = distortLists
         self.atomsLists = atomsLists
+        self.elementsLists = elementsLists
         self.bondsArrays = bondsArrays
         self.coordsArrays = coordsArrays
 

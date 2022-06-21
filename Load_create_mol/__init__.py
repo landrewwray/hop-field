@@ -5,6 +5,6 @@ Created on Tue Jun  7 14:33:41 2022
 @author: danie
 """
 
-import Load_mol
-import distort_mol
-import config_wrapper
+import load_create_mol.load_mol
+import load_create_mol.distort_mol
+import load_create_mol.config_wrapper

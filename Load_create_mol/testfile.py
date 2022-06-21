@@ -10,7 +10,7 @@ import pandas as pd
 from math import floor
 from os import listdir
 import copy
-import Load_mol as lm
+import load_mol as lm
 import distort_mol as dm
 import config_wrapper as cw
 import random
