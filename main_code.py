@@ -7,7 +7,7 @@ Created on Tue Jun 14 07:03:08 2022
 """
 import universalmodel.universalmodel as um
 import load_create_mol as lcm #***
-import atom_stitcher.make_mat_lists as mkLst
+import hmat_stitcher.make_mat_lists as mkLst
 #1. code to load and create molecule --> molConfigList
 
 

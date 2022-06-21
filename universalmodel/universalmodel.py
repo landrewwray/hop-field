@@ -106,6 +106,9 @@ class Hterm:
             # self.curve.I_of_r, .Imax, .Imin
 
 class UniversalModel:
+    """stores the following variables: elementList, initList, termsList, orbSyms, electronsPerAtom
+    """
+    
     def __init__(self, *args):
         elementList=['H','Hinit_0.txt'] #default to hydrogen
         
@@ -117,7 +120,7 @@ class UniversalModel:
         self.elementList = [elementList[0]] 
         self.initList = [elementList[1]] 
         self._makeAtomTerms() # creates self.termsList --> just orbital energies and SOC
-                              # also creates self.orbSyms
+                              # also creates self.orbSyms and self.electronsPerAtom
         
     def __add__(self, other):
         return self._combineModels(other)
@@ -127,6 +130,7 @@ class UniversalModel:
         self.initList+= other.initList
         self.termsList+=other.termsList
         self.orbSyms+=other.orbSyms
+        self.electronsPerAtom+=other.electronsPerAtom
         
         return self
     
@@ -137,7 +141,11 @@ class UniversalModel:
         self.termsList = []
         
         theList = loadTerms(self.initList[0])
+
+        self.electronsPerAtom=theList[2][0]
+        
         theList = theList[0] #just the single atom terms
+        
         
         orbSymList=[]
         for nextTerm in theList:
