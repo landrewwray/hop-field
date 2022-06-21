@@ -1,8 +1,8 @@
 @Atomic terms
-s -2 -4 0
-p 2 0 4
+s -2 -4 0 1
+p 2 0 4 3
 
-# Atomic terms arguments are: [orbital] [initial energy at r=1 angstrom] [min energy] [max energy]
+# Atomic terms arguments are: [orbital] [initial energy at r=1 angstrom] [min energy] [max energy] [number of mL states]
 
 @Interatomic Coulomb terms
 X E -1 -1.5 0 0.5 10 5
