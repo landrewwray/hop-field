@@ -11,3 +11,5 @@ import load_create_mol as lcm
 atomsLists, bondsArrays, coordsArrays = lcm.load_mol.loadMol("C:/Users/danie/OneDrive/Documents/GitHub/hop-field/Molecular Structure Data/*.mol2") #path specific to device?
 configsLists = lcm.config_wrapper.allMolDistortions("C:/Users/danie/OneDrive/Documents/GitHub/hop-field/Molecular Structure Data/*.mol2")
 configs = lcm.config_wrapper.ConfigWrapper(configsLists, atomsLists, bondsArrays, coordsArrays)
+
+elementsLists = lcm.config_wrapper.elementsLists(atomsLists)

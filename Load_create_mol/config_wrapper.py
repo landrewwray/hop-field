@@ -10,6 +10,7 @@ import random
 import pandas as pd
 from math import floor
 from os import listdir
+import re
 import copy
 import load_create_mol.load_mol as lm
 import load_create_mol.distort_mol as dm
@@ -121,6 +122,15 @@ def allMolDistortions(path):
 
     return distortionLists
 
+def elementsLists (atomsLists): 
+    elementsLists = []
+    for molecule in atomsLists:
+        elemList = []
+        for atom in molecule:
+            elemList += [re.findall('([a-zA-Z ]*)\d*.*', atom)[0]]
+        elementsLists +=[[elemList]]      
+        elemList = []
+    return elementsLists    
 
 class ConfigWrapper:
     """

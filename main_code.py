@@ -9,8 +9,10 @@ import universalmodel.universalmodel as um
 # import load_create_mol as lcm #***
 # import hmat_stitcher.hmat_stitcher as stitch
 
-#1. code to load and create molecule --> molConfigList
-
+# 1. code to load and create molecule --> molConfigList
+# atomsLists, bondsArrays, coordsArrays = lcm.load_mol.loadMol("C:/.../hop-field/Molecular Structure Data/*.mol2") 
+# configsLists = lcm.config_wrapper.allMolDistortions("C:/.../hop-field/Molecular Structure Data/*.mol2")
+# configs = lcm.config_wrapper.ConfigWrapper(configsLists, atomsLists, bondsArrays, coordsArrays)
 
 #2. make the universal model
 theUM = um.UniversalModel(['C','Cinit_0.txt'])
