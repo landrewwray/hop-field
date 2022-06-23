@@ -68,12 +68,29 @@ class ConfigTerms:
                 if theDist <= maxDist:
                     self.pairs_list+=[[ii,jj,theDist]]    
     
-    def getElNums(self, theConfigsWrapper):
+    def getElNums(self, theConfigsWrapper, theUM):
         """Uses the universal model and configs to generate a list of electron number for each configuration.
         This will reference self.UM.electronsPerAtom and self.UM.elementList
         
-        Returns a list of electron number for each configuration.
+        Returns a list of electron number for each configuration: List of lists with length 5 for 4 distorted + 1 original configuration.
         """
+        configSortLists = []
+        for molecule in theConfigsWrapper.elementsLists: # loop through all molecules
+            atomSortLists = []
+            for element in theUM.elementList:
+                  atomSortLists += [[atom for atom in molecule if atom == element]] 
+            configSortLists += [atomSortLists]
+        
+        electronNum = []
+        for molecule in configSortLists:
+            electronSum = 0
+            for index in range(len(molecule)):
+                electronSum += len(sortedConfig[index]) * theUM.electronsPerAtom[index]
+            electronNum += [[electronSum]]
+            
+        electronsPerConfig = [[electronTotal for i in range(5)] for electronTotal in electronNum]    
+        
+        return electronsPerConfig
         #***
         
         

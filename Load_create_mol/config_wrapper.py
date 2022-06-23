@@ -102,7 +102,6 @@ def allMolDistortions(path):
     atomsLists, bondsArrays, coordsArrays = lm.loadMol(path)
     
     distortionLists = []
-
     for index in range(len(atomsLists)):
         numDistort = (bondsArrays[index].shape[0])//2
         chosenBonds = random.sample(
@@ -128,7 +127,7 @@ def elementsLists (atomsLists):
         elemList = []
         for atom in molecule:
             elemList += [re.findall('([a-zA-Z ]*)\d*.*', atom)[0]]
-        elementsLists +=[[elemList]]      
+        elementsLists +=[elemList]      
         elemList = []
     return elementsLists    
 

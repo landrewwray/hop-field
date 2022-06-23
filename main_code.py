@@ -6,13 +6,14 @@ Created on Tue Jun 14 07:03:08 2022
 
 """
 import universalmodel.universalmodel as um
-# import load_create_mol as lcm #***
+import load_create_mol as lcm #***
 # import hmat_stitcher.hmat_stitcher as stitch
 
 # 1. code to load and create molecule --> molConfigList
-# atomsLists, bondsArrays, coordsArrays = lcm.load_mol.loadMol("C:/.../hop-field/Molecular Structure Data/*.mol2") 
-# configsLists = lcm.config_wrapper.allMolDistortions("C:/.../hop-field/Molecular Structure Data/*.mol2")
-# configs = lcm.config_wrapper.ConfigWrapper(configsLists, atomsLists, bondsArrays, coordsArrays)
+atomsLists, bondsArrays, coordsArrays = lcm.load_mol.loadMol("C:/Users/danie/OneDrive/Documents/GitHub/hop-field/Molecular Structure Data/*.mol2") 
+configsLists = lcm.config_wrapper.allMolDistortions("C:/Users/danie/OneDrive/Documents/GitHub/hop-field/Molecular Structure Data/*.mol2")
+elementsLists = lcm.config_wrapper.elementsLists(atomsLists)
+configs = lcm.config_wrapper.ConfigWrapper(configsLists, atomsLists, elementsLists, bondsArrays, coordsArrays) # distortLists, atomsLists, elementsLists, bondsArrays, coordsArrays
 
 #2. make the universal model
 theUM = um.UniversalModel(['C','Cinit_0.txt'])
