@@ -27,10 +27,10 @@ class ConfigTerms:
             self.MElists += self.makeMElist(theConfigsWrapper,configPl)
             
             
-    def makeMElist(self,theConfigsWrapper,theConfigNum):
+    def makeMElist(self,theConfigsWrapper,theMoleculeNum, theUM):
         """ Creates the hamiltonian lists for each configuration
         """
-        #note that config is a set of 5 slightly different coordinate sets
+         #note that config is a set of 5 slightly different coordinate sets
         
         # 1. first define the initial Hamiltonian index for each [atom][orbital] (list of lists of integers)
         #    -- this needs a separate function -- give 's'-orbitals 1 index, 'p': 3 indices
@@ -56,6 +56,40 @@ class ConfigTerms:
         
         #*** the returned list will look like matsList[distortionNum][distortionTypeNum][HmatListNum] = np.asarray[[sOrbInd, sOrbInd, E_s]]
         
+    def hamiltonianIndex (self,theConfigsWrapper,theMoleculeNum, theUM):
+        molOrbsLists = []
+        
+        for molecule in theConfigsWrapper.elementsLists[theMoleculeNum]:
+            atomOrbTotals = []
+            for atom in molecule:
+                for element in theUM.elementList:
+                    if atom == element:
+                        atomOrb = []
+                        for orbital in theUM.orbSyms[theUM.elementList.index(element)]:
+                            atomOrb += [orbital[1]]
+                atomOrbTotals += [atomOrb]
+            molOrbsLists += [atomOrbTotals]
+        
+        
+        molOrbsIndexLists = []
+        for molecule in molOrbsLists:
+            orbIndex = 0
+            orbIndices = list(range(theUM.getElNums[molOrbsLists.index(molecule)]))
+            atomOrbIndices = []
+            for atom in molecule:
+                orbIndexList = []
+                for orbital in atom:
+                    if orbital > 1: 
+                        orbIndexList += [[min(orbIndices[orbIndex:(orbIndex+orbital)]), max(orbIndices[orbIndex:(orbIndex+orbital)])]]
+                    elif orbital == 1:
+                        orbIndexList += [orbIndices[orbIndex:(orbIndex+orbital)]]
+                    orbIndex += orbital
+                atomOrbIndices += [orbIndexList]
+            molOrbsIndexLists += [atomOrbIndices]
+            
+        return molOrbsIndexLists
+        
+       
     def findPairs(self, maxDist):
         #this function is coppied from my old code
 
