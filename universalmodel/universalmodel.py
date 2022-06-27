@@ -141,8 +141,8 @@ class UniversalModel:
         self.termsList = []
         
         theList = loadTerms(self.initList[0])
-
-        self.electronsPerAtom=theList[2][0]
+        
+        self.electronsPerAtom=[int(theList[2][0][0])]
         
         theList = theList[0] #just the single atom terms
         
@@ -196,6 +196,17 @@ class UniversalModel:
         # Remove unnecessary terms from self.termsList - there are still 
         pass
     
+    def getOrbSymNum(self,elementName,orbName):
+        #get the index of an orbital type for a specific element (the 's' and 'p' orbitals of C have indices 0 and 1)
+        for elementType in range(len(self.elementList)):
+            if self.elementList[elementType] == elementName:
+                #now find the orbital
+                for orbNum in range(len(self.orbSyms[elementType])):
+                    if self.orbSyms[elementType][orbNum][0] == orbName:
+                        return orbNum
+        
+        return None
+                
 
 # theUM = UniversalModel(['C','Cinit_0.txt'])
 # theUM += UniversalModel(['H','Hinit_0.txt'])  # define __add__ appropriately
