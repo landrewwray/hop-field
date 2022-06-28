@@ -4,7 +4,7 @@
 Created on Tue Jun 14 07:03:08 2022
 @author: lawray
 """
-
+import numpy as np
 
 class ConfigTerms:
     def __init__(self, theUM, theConfigsWrapper):
@@ -161,17 +161,36 @@ class ConfigTerms:
         return molOrbsIndexList
         
        
-    def findPairs(self, maxDist):
-        #this function is coppied from my old code
+    def findPairs(self, theConfigsWrapper, maxDist):
+        #Loops through every atom pair in every distortion on every chosen bond in every molecule to find pairs under maxDist.
 
         #***
+        self.pairsLists = []
         
-        self.pairs_list=[]
-        for ii in range(len(self.atoms_list)):
-            for jj in range(ii+1,len(self.atoms_list)):
-                theDist=np.linalg.norm(self.coords_arry[jj,:]-self.coords_arry[ii,:])
-                if theDist <= maxDist:
-                    self.pairs_list+=[[ii,jj,theDist]]    
+        for moleculeIndex in range(len(theConfigsWrapper.distortLists)):
+            moleculePairs = []
+            for chosenBondIndex in range(len(theConfigsWrapper.distortLists[moleculeIndex])):
+                bondPairs = []
+                for distortionIndex in range(len(theConfigsWrapper.distortLists[moleculeIndex][chosenBondIndex])):
+                    distortionPairs = []
+                    for indexOne in range(len(theConfigsWrapper.distortLists[moleculeIndex][chosenBondIndex][distortionIndex])):
+                        for indexTwo in (range(indexOne+1, len(theConfigsWrapper.distortLists[moleculeIndex][chosenBondIndex][distortionIndex]))):
+                                 dist = np.linalg.norm(theConfigsWrapper.distortLists[moleculeIndex][chosenBondIndex][distortionIndex][indexOne] - theConfigsWrapper.distortLists[moleculeIndex][chosenBondIndex][distortionIndex][indexTwo])
+                                 if dist <= maxDist:
+                                     distortionPairs += [[indexOne, indexTwo, dist]]
+                    bondPairs += [distortionPairs]
+                moleculePairs += [bondPairs]
+            self.pairsLists += [moleculePairs]
+                             
+        
+# =============================================================================
+#         self.pairs_list=[]
+#         for ii in range(len(self.atoms_list)):
+#             for jj in range(ii+1,len(self.atoms_list)):
+#                 theDist=np.linalg.norm(self.coords_arry[jj,:]-self.coords_arry[ii,:])
+#                 if theDist <= maxDist:
+#                     self.pairs_list+=[[ii,jj,theDist]]    
+# =============================================================================
     
     def getElNums(self, theConfigsWrapper):
         """Uses the universal model and configs to generate a list of electron number for each configuration.

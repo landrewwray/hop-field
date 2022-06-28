@@ -14,7 +14,7 @@ import hmat_stitcher.hmat_stitcher as stitch
 molFilePath="Molecular Structure Data/*.mol2"
 bondsPerMol=5 # Number of bonds to distort in each molecule (if enough bonds exist)
 atomsLists, bondsArrays, coordsArrays = lcm.load_mol.loadMol(molFilePath) 
-configsLists, molNumList = lcm.config_wrapper.allMolDistortions(molFilePath,bondsPerMol)
+configsLists, molNumList, distortedBonds = lcm.config_wrapper.allMolDistortions(molFilePath,bondsPerMol)
 elementsLists = lcm.config_wrapper.elementsLists(atomsLists)
 configs = lcm.config_wrapper.ConfigWrapper(configsLists, atomsLists, elementsLists, bondsArrays, coordsArrays) # distortLists, atomsLists, elementsLists, bondsArrays, coordsArrays
 
