@@ -4,7 +4,7 @@
 Created on Tue Jun 14 07:03:08 2022
 @author: lawray
 """
-import numpy as np
+
 
 class ConfigTerms:
     def __init__(self, theUM, theConfigsWrapper):
@@ -41,13 +41,12 @@ class ConfigTerms:
         # 2. next loop through the UM terms (theUM.termsList) and identify a list of pairs for each
         # (this is addressed by the 'ConfigTerms.findPairs' function below, 
         # but one needs the specific maxDist for each UM term)
+
+        #*** should create this:
+        #*** self.pairsList[moleculeNum][distortBondNum][distortionNum_0_thru_4][pairNum][atom_1_or_2_or_dist]
+        #  e.g. self.pairsList[3][2][3][17] == [3, 5, 0.784832]
         
-        #*** 1 function for this:
-        #*** self.pairsList[moleculeNum][pairNum][atom_1_or_2_or_dist]
-        #  e.g. self.pairsList[3][17] == [3, 5, 0.784992]
-        #*** then create this:
-        #*** self.distortPairsList[moleculeNum][distortBondNum][distortionNum_1_thru_4][pairNum][atom_1_or_2_or_dist]
-        #  e.g. self.distortPairsList[3][2][3][17] == [3, 5, 0.784832]
+        
         
         # 3. Now create the terms, saving the UM call parameters for each ME.
         #    This means first identifying the kind of term (single atom, 2-body interaction, hopping),
@@ -58,11 +57,11 @@ class ConfigTerms:
         # if theUM.termsList[theTermNum].element1==None --> it's a single-atom term
         # otherwise check theUM.termsList[theTermNum].hop (True/False) to see if it's a hopping term
         
-        molMats=[] # molMats[termNum][sparseMatNum][if_mat_0_if_call_1]
+        molMats=[] # molMats[termNum][distortNum][sparseMatNum][if_mat_0_if_call_1]
         for theTerm in self.UM.termsList:
             molMats+=[self._makeMolMats(theTerm,molPl,theConfigsWrapper)]
             
-        self.hmatTermLists+= [molMats]
+        self.hmatTermLists+= [molMats] #gives molMats[molNum][termNum][distortNum][sparseMatNum][if_mat_0_if_call_1]
         
         #*** the returned list will look like matsList[distortionNum][distortionTypeNum][HmatListNum] = np.asarray[[sOrbInd, sOrbInd, E_s]]
         return []
@@ -77,9 +76,23 @@ class ConfigTerms:
         if termType==0: # if it's a single atom term
             return self._makeSingleAtomHmatTerms(theTerm,molPl,theConfigsWrapper)
         elif termType==1:
-            return None
+            return self._make2AtomCoulombHmatTerms(theTerm,molPl,theConfigsWrapper)
         elif termType==2:
             return None
+        
+    def _make2AtomCoulombHmatTerms(self,theTerm,molPl,theConfigsWrapper):
+        """
+        theConfigsWrapper.elementsLists[molPl]
+        self.pairsList[moleculeNum][pairNum][atom_1_or_2_or_dist]
+        self.distortPairsList[moleculeNum][distortBondNum][distortionNum_1_thru_4][pairNum][atom_1_or_2_or_dist]
+        self.UM.termsList[termNum].element0
+        
+        """
+        
+        #***check that _makeSingleAtomHmatTerms is compatible with distortList format
+        
+        return None
+    
         
     def _makeSingleAtomHmatTerms(self,theTerm,molPl,theConfigsWrapper):
         """Referenced variables:
@@ -100,6 +113,8 @@ class ConfigTerms:
                 theIndex=self.hmatIndex[molPl][atomNum][orbSym]
                 
                 termsList += [[theIndex, theIndex,1],[]]
+        
+        termsList = [termsList]*5
         
         return termsList
         
@@ -146,35 +161,17 @@ class ConfigTerms:
         return molOrbsIndexList
         
        
-    def findPairs(self, theConfigsWrapper, maxDist):
+    def findPairs(self, maxDist):
         #this function is coppied from my old code
 
         #***
-        self.pairsLists = []
-        self.distortPairsLists = []
         
-        for moleculeIndex in range(len(theConfigsWrapper.coordsArrays)):
-            moleculePairs = []
-            for indexOne in range(len(theConfigsWrapper.coordsArrays[moleculeIndex])):
-                for indexTwo in (range(indexOne+1, len(theConfigsWrapper.coordsArrays[moleculeIndex]))):
-                         dist = np.linalg.norm(theConfigsWrapper.coordsArrays[indexOne] - theConfigsWrapper.coordsArrays[indexTwo])
-                         if dist <= maxDist:
-                             moleculePairs += [indexOne, indexTwo, dist]
-                self.pairsLists += [moleculePairs]
-                             
-# =============================================================================
-#         for moleculeIndex in range(len(theConfigsWrapper.distortLists)):
-#             distortPairs = []
-#             for 
-# =============================================================================
-# =============================================================================
-#         self.pairs_list=[]
-#         for ii in range(len(self.atoms_list)):
-#             for jj in range(ii+1,len(self.atoms_list)):
-#                 theDist=np.linalg.norm(self.coords_arry[jj,:]-self.coords_arry[ii,:])
-#                 if theDist <= maxDist:
-#                     self.pairs_list+=[[ii,jj,theDist]]    
-# =============================================================================
+        self.pairs_list=[]
+        for ii in range(len(self.atoms_list)):
+            for jj in range(ii+1,len(self.atoms_list)):
+                theDist=np.linalg.norm(self.coords_arry[jj,:]-self.coords_arry[ii,:])
+                if theDist <= maxDist:
+                    self.pairs_list+=[[ii,jj,theDist]]    
     
     def getElNums(self, theConfigsWrapper):
         """Uses the universal model and configs to generate a list of electron number for each configuration.
