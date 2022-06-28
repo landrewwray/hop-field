@@ -57,6 +57,7 @@ def make1MolDistortions(atoms_list, coords_arry, bonds_arry, numDistort, chosenB
         )
         distortList += [
             [
+                coords_arry,
                 newCoordsBucklePlus,
                 newCoordsBuckleMinus,
                 newCoordsStretchPlus,
