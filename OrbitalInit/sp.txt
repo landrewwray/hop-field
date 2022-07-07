@@ -1,0 +1,13 @@
+@Orbitals referenced
+s p
+
+# the basis will reference these orbitals in order
+
+@Matrix
+
+0 0 0 1
+0 0 0 0
+0 0 0 0
+1 0 0 0
+
+#basis is px, py, pz, and the nearest-neighbor is found on the +z-axis
