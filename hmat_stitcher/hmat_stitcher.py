@@ -98,6 +98,25 @@ class ConfigTerms:
         
         where [MEnum][list_ind0_ind1_matrixElement2] defines a sparse matrix
         """
+        coulombTermsList = []
+        
+        for chosenBond in self.pairsList[molPl]:
+            bonds = []
+            for distortion in chosenBond:
+                distortions = []
+                for pair in distortion:
+                    matElements = []
+                    if pair[2] < theTerm.maxDist: # correct name??
+                        if theConfigsWrapper.elementsList[molPl][pair[0]] == theTerm.element0 && theConfigsWrapper.elementsList[molPl][pair[1]] == theTerm.element1:
+                            matElement = theTerm.curve.readVal(pair[2])
+                            pert0 = self.makeCFpert(pair[0], matElement, theUM.termsList[7].term[1])
+                            pert1 = self.makeCFpert(pair[1], matElement, theUM.termsList[7].term[1])
+                            matElements += [pert0, pert1]
+                     distortions += [matElements]
+                bonds += [distortions]
+         coulombTermsList += [bonds]
+        
+        return coulombTermsList
         
         #loop through pairsList -- for each pair:
         # (1) check if the distance is OK (<theTerm.max) 
