@@ -98,25 +98,6 @@ class ConfigTerms:
         
         where [MEnum][list_ind0_ind1_matrixElement2] defines a sparse matrix
         """
-        coulombTermsList = []
-        
-        for chosenBond in self.pairsList[molPl]:
-            bonds = []
-            for distortion in chosenBond:
-                distortions = []
-                for pair in distortion:
-                    matElements = []
-                    if pair[2] < theTerm.maxDist: # correct name?? # check if the pair distance is correct
-                        if theConfigsWrapper.elementsList[molPl][pair[0]] == theTerm.element0 && theConfigsWrapper.elementsList[molPl][pair[1]] == theTerm.element1: # orbital symmetry check
-                            matElement = theTerm.curve.readVal(pair[2])
-                            pert0 = self.makeCFpert(pair[0], matElement, theUM.termsList[7].term[1])
-                            pert1 = self.makeCFpert(pair[1], matElement, theUM.termsList[7].term[1]) # perturb the orbitals for both atoms in the pair
-                            matElements += [pert0, pert1]
-                     distortions += [matElements]
-                bonds += [distortions]
-         coulombTermsList += [bonds]
-        
-        return coulombTermsList
         
         #loop through pairsList -- for each pair:
         # (1) check if the distance is OK (<theTerm.max) 
@@ -131,6 +112,61 @@ class ConfigTerms:
         
         return None
     
+    def makeCFpert(self,thePair,theME,orbSym):
+        """Create the orbital perturbation matrix elements
+        
+        Possible orbSym values are:
+            's'/'p'/'psigma'/'sp'...: see init matrices
+            'E': on-diagonal perturbation for all electrons, not just on the paired atoms
+                (i.e. this is a classical energy term for the atomic configuration)
+            
+        Returns a list representing a Hermetian sub-matrix
+        """
+        
+        pass
+        
+    def makeRotMat(self,axisDir,orbBasis):
+        """
+        
+
+        Parameters
+        ----------
+        axisDir : TYPE
+            DESCRIPTION.
+        orbBasis : TYPE
+            List of letters representing the orbitals.
+
+        Returns
+        -------
+        None.
+
+        """
+        #loop through the orbital-resolved parts of the Hamiltonian (double loop) and multiply the
+        #correct rotation matrices from the right/left to create the final matrix
+        pass
+    
+        
+    def singleRot(self,axisDir,theOrb):        
+        #returns a rotation matrix that acts from the left
+
+        if theOrb == 's':
+            return [1]
+        if theOrb == 'p':
+            randomOrientation=np.random.rand(3)
+            zPrime = axisDir/np.linalg.norm(axisDir)
+            xPrime = np.cross(randomOrientation,zPrime)
+            yPrime = np.cross(xPrime,zPrime)
+            
+            xPrime/=np.linalg.norm(xPrime)
+            yPrime/=np.linalg.norm(yPrime)
+            
+            theMat=  zPrime.reshape(3,1) @ np.asarray([[0, 0, 1]]) + xPrime.reshape(3,1) @ np.asarray([[1, 0, 0]]) + yPrime.reshape(3,1) @ np.asarray([[0, 1, 0]])            
+        
+            return theMat
+        
+    
+    # def orbitalTransform(self,theDir,orbSym):
+        
         
     def _makeSingleAtomHmatTerms(self,theTerm,molPl,theConfigsWrapper):
         """Referenced variables:
