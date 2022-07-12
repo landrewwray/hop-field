@@ -19,7 +19,8 @@ class ConfigTerms:
         self.UM = theUM  # to remember they types of Hamiltonian terms
         self.electronNums=self.getElNums(theConfigsWrapper)  #***
         
-        
+        self._makeOrbDefs # define orbital vectors
+
         self.MElists=[]   # initialized by makeMElist
         self.pairsList=[] # initialized by makeMElist
         self.hmatIndex=[] # values created inside makeMElist
@@ -27,6 +28,9 @@ class ConfigTerms:
         for molPl in range(len(theConfigsWrapper.distortLists)): # ***fix the list name!
             self.MElists += self.makeMElist(theConfigsWrapper,molPl)
             
+            
+    def _makeOrbDefs(self):
+        self.orbDefs = {'p': {'sigma': np.asarray([[0,0,1]]),'pi': np.asarray([[1,0,0],[0,1,0]])}, 's': {'sigma': np.asarray([[1]])}}
             
     def makeMElist(self,theConfigsWrapper,molPl):
         """ Creates the hamiltonian lists for each configuration
@@ -87,7 +91,8 @@ class ConfigTerms:
             return None
         
     def _make2AtomCoulombHmatTerms(self,theTerm,molPl,theConfigsWrapper):
-        """
+        """***NOTE: theME needs to be looked up dynamically later, not multiplied onto these matrices!!!
+        
         theConfigsWrapper.elementsLists[molPl]
         self.pairsList[molPl][distortBondNum][distortionNum_0_thru_4][pairNum][atom_1_or_2_or_dist]
         self.distortPairsList[moleculeNum][distortBondNum][distortionNum_1_thru_4][pairNum][atom_1_or_2_or_dist]
@@ -109,60 +114,48 @@ class ConfigTerms:
         # (5) reverse the order of the atoms and run #2-4 again
         
         #***check that _makeSingleAtomHmatTerms is compatible with distortList format
-        distortions = []
-                for pair in distortion:
-                    matElements = []
-                    if pair[2] < theTerm.maxDist: # correct name?? # check if the pair distance is correct
-                        if theConfigsWrapper.elementsList[molPl][pair[0]] == theTerm.element0 && theConfigsWrapper.elementsList[molPl][pair[1]] == theTerm.element1: # orbital symmetry check
-                            matElement = theTerm.curve.readVal(pair[2])
-                            pert0 = self.makeCFpert(pair[0], matElement, theUM.termsList[7].term[1])
-                            pert1 = self.makeCFpert(pair[1], matElement, theUM.termsList[7].term[1])
-                            pert1 = self.makeCFpert(pair[1], matElement, theUM.termsList[7].term[1]) # perturb the orbitals for both atoms in the pair
-                            matElements += [pert0, pert1]
-                        distortions += [matElements]
-                bonds += [distortions]
+        
+        orbSym=theTerm.term[1:3] # for calling makeCFpert
+        
+        
+        
         return None
     
-    def makeCFpert(self,thePair,theME,orbSym):
-        """Create the orbital perturbation matrix elements
+    def makeCFpert(self,thePair,theME,orbSym,molPl):
+        """***Not yet tested! Create the orbital perturbation matrix elements
+        ***NOTE: theME needs to be looked up dynamically later, not multiplied onto these matrices!!!
         
         Possible orbSym values are:
-            's'/'p'/'psigma'/'sp'...: see init matrices
+            ['s'/'p'/'sp', 'sigma'/'pi'] : see init matrices
             'E': on-diagonal perturbation for all electrons, not just on the paired atoms
                 (i.e. this is a classical energy term for the atomic configuration)
             
         Returns a list representing a Hermetian sub-matrix
         """
         
-        pass
+        rotMat = self.singleRot(thePair[3],orbSym[0])
         
-    def makeRotMat(self,axisDir,orbBasis):
-        """
+        theOrbVectors=self.orbDefs[orbsym[0]][orbsym[1]]
+        matDim = theOrbVectors.shape[1]
         
+        # Now build the term matrix
+        theMat=np.zeros((matDim,matDim))
+        for orbNum in range(theOrbVectors.shape[0]):
+            theMat += rotMat @ (theOrbVectors[orbNum,:].T @ theOrbVectors[orbNum,:]) @ rotMat.T
+        
+        # *** Now convert to a sparse matrix and add the correct index for thePair[0] and indexOrb from self.hmatIndex
+        indexOrb=orbSym[0][0]
+        
+        self.hmatIndex[molPl][thePair[0]] # one more index needed: [***last index is 0 for indexOrb=='s' and 1 for indexOrb=='p']
 
-        Parameters
-        ----------
-        axisDir : TYPE
-            DESCRIPTION.
-        orbBasis : TYPE
-            List of letters representing the orbitals.
-
-        Returns
-        -------
-        None.
-
-        """
-        #loop through the orbital-resolved parts of the Hamiltonian (double loop) and multiply the
-        #correct rotation matrices from the right/left to create the final matrix
-        pass
-    
         
     def singleRot(self,axisDir,theOrb):        
         #returns a rotation matrix that acts from the left
+        # ***not yet tested for sp orbital
 
         if theOrb == 's':
             return [1]
-        if theOrb == 'p':
+        if theOrb == 'p' or theOrb == 'sp':
             randomOrientation=np.random.rand(3)
             zPrime = axisDir/np.linalg.norm(axisDir)
             xPrime = np.cross(randomOrientation,zPrime)
@@ -173,7 +166,16 @@ class ConfigTerms:
             
             theMat=  zPrime.reshape(3,1) @ np.asarray([[0, 0, 1]]) + xPrime.reshape(3,1) @ np.asarray([[1, 0, 0]]) + yPrime.reshape(3,1) @ np.asarray([[0, 1, 0]])            
         
-            return theMat
+            if theOrb == 'p': # == [0, 0, 1]
+                return theMat
+            else: #theOrb == 'sp' == [1, 0, 0, 1]*2**-1
+                # R @ |sp> @ <sp| @R.T
+                finalMat=np.zeros((4,4))
+                finalMat[0,0]=1
+                finalMat[1:,1:]=theMat
+                return finalMat
+            
+        
         
     
     # def orbitalTransform(self,theDir,orbSym):
@@ -261,8 +263,9 @@ class ConfigTerms:
                 for indexOne in range(len(theConfigsWrapper.distortLists[molPl][chosenBondIndex][distortionIndex])):
                     for indexTwo in (range(indexOne+1, len(theConfigsWrapper.distortLists[molPl][chosenBondIndex][distortionIndex]))):
                              dist = np.linalg.norm(theConfigsWrapper.distortLists[molPl][chosenBondIndex][distortionIndex][indexOne] - theConfigsWrapper.distortLists[molPl][chosenBondIndex][distortionIndex][indexTwo])
+                             axisDir = theConfigsWrapper.distortLists[molPl][chosenBondIndex][distortionIndex][indexOne] - theConfigsWrapper.distortLists[molPl][chosenBondIndex][distortionIndex][indexTwo]
                              if dist <= maxDist:
-                                 distortionPairs += [[indexOne, indexTwo, dist]]
+                                 distortionPairs += [[indexOne, indexTwo, dist, axisDir]]
                 singleBondPairs += [distortionPairs]
             
             bondPairs += [singleBondPairs]
