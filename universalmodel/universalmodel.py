@@ -117,6 +117,8 @@ class UniversalModel:
         elif len(args)==2:
             self._combineModels(args[0],args[1])
         
+        self.maxDist=1e6 # effectively infinite.  A real value is set in self.makeCrossTerms
+        
         self.elementList = [elementList[0]] 
         self.initList = [elementList[1]] 
         self._makeAtomTerms() # creates self.termsList --> just orbital energies and SOC
@@ -162,6 +164,7 @@ class UniversalModel:
         theUM.makeCrossTerms(['all'],'Hop_generic0.txt')
 
         """
+        self.maxDist=0
         
         if allowedTypes[0]=='all':
             allowedTypes=set(self.elementList)
@@ -182,12 +185,19 @@ class UniversalModel:
                     for nextTerm in theList:
                         if nextTerm[0]==self.elementList[pl2] or nextTerm[0]=='X':
                             self.termsList += [Hterm(self.elementList[pl1],self.elementList[pl2],[nextTerm],False)]
+                            
+                            if self.termsList[-1].curve.dMax > self.maxDist: #keep track of the maximum interaction distance
+                                self.maxDist = self.termsList[-1].curve.dMax
+                                
                     #Hopping terms:
                     if pl2>=pl1:  #avoid double counting
                         for nextTerm in hopList:
                             if nextTerm[0]==self.elementList[pl2] or nextTerm[0]=='X':
                                 if ((nextTerm[2] in self.orbSyms[pl1]) and (nextTerm[3] in self.orbSyms[pl2])) or ((nextTerm[2] in self.orbSyms[pl2]) and (nextTerm[3] in self.orbSyms[pl1])):
                                     self.termsList += [Hterm(self.elementList[pl1],self.elementList[pl2],[nextTerm],True)]
+                                    
+                                    if self.termsList[-1].curve.dMax > self.maxDist: #keep track of the maximum interaction distance
+                                        self.maxDist = self.termsList[-1].curve.dMax
                     
                     #***Note!  The 'E' Coulomb terms between different atom types are duplicated
         self.pruneTermsList
@@ -195,8 +205,7 @@ class UniversalModel:
     def pruneTermsList(self):
         # Remove unnecessary terms from self.termsList - there are still 
         pass
-    
-    def getOrbSymNum(self,elementName,orbName):
+        def getOrbSymNum(self,elementName,orbName):
         #get the index of an orbital type for a specific element (the 's' and 'p' orbitals of C have indices 0 and 1)
         for elementType in range(len(self.elementList)):
             if self.elementList[elementType] == elementName:
