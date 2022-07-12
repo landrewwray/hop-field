@@ -109,7 +109,18 @@ class ConfigTerms:
         # (5) reverse the order of the atoms and run #2-4 again
         
         #***check that _makeSingleAtomHmatTerms is compatible with distortList format
-        
+        distortions = []
+                for pair in distortion:
+                    matElements = []
+                    if pair[2] < theTerm.maxDist: # correct name?? # check if the pair distance is correct
+                        if theConfigsWrapper.elementsList[molPl][pair[0]] == theTerm.element0 && theConfigsWrapper.elementsList[molPl][pair[1]] == theTerm.element1: # orbital symmetry check
+                            matElement = theTerm.curve.readVal(pair[2])
+                            pert0 = self.makeCFpert(pair[0], matElement, theUM.termsList[7].term[1])
+                            pert1 = self.makeCFpert(pair[1], matElement, theUM.termsList[7].term[1])
+                            pert1 = self.makeCFpert(pair[1], matElement, theUM.termsList[7].term[1]) # perturb the orbitals for both atoms in the pair
+                            matElements += [pert0, pert1]
+                        distortions += [matElements]
+                bonds += [distortions]
         return None
     
     def makeCFpert(self,thePair,theME,orbSym):
