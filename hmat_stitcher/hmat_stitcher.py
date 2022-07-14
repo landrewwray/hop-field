@@ -115,11 +115,27 @@ class ConfigTerms:
         
         #***check that _makeSingleAtomHmatTerms is compatible with distortList format
         
-        orbSym=theTerm.term[1:3] # for calling makeCFpert
-        
-        
-        
-        return None
+        orbSym=theTerm.term[1:3] # for calling makeCFpert #NOTE: Not all theTerm.term arrays have ['s'/'p'/'sp', 'sigma'/'pi'] for the indices theTerm.term[1:3]
+        coulombTermsList = []
+
+        for chosenBond in self.pairsList[molPl]:
+            bonds = []
+            for distortion in chosenBond:
+                distortions = []
+                for pair in distortion:
+                    matElements = []
+                    if pair[2] < theTerm.maxDist: # correct name?? # check if the pair distance is correct
+                        if theConfigsWrapper.elementsList[molPl][pair[0]] == theTerm.element0 && theConfigsWrapper.elementsList[molPl][pair[1]] == theTerm.element1: # orbital symmetry check
+                            matElement = theTerm.curve.readVal(pair[2])
+                            pert0 = self.makeCFpert(pair[0], matElement, theUM.termsList[7].term[1])
+                            pert1 = self.makeCFpert(pair[1], matElement, theUM.termsList[7].term[1]) # perturb the orbitals for both atoms in the pair
+                            matElements += [pert0, pert1]
+                     distortions += [matElements]
+                bonds += [distortions]
+         coulombTermsList += [bonds]
+
+        return coulombTermsList
+        # return None
     
     def makeCFpert(self,thePair,theME,orbSym,molPl):
         """***Not yet tested! Create the orbital perturbation matrix elements
@@ -145,6 +161,8 @@ class ConfigTerms:
         
         # *** Now convert to a sparse matrix and add the correct index for thePair[0] and indexOrb from self.hmatIndex
         indexOrb=orbSym[0][0]
+        orbitalBinary = 0
+        
         
         self.hmatIndex[molPl][thePair[0]] # one more index needed: [***last index is 0 for indexOrb=='s' and 1 for indexOrb=='p']
 

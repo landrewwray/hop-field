@@ -205,7 +205,7 @@ class UniversalModel:
     def pruneTermsList(self):
         # Remove unnecessary terms from self.termsList - there are still 
         pass
-        def getOrbSymNum(self,elementName,orbName):
+    def getOrbSymNum(self,elementName,orbName):
         #get the index of an orbital type for a specific element (the 's' and 'p' orbitals of C have indices 0 and 1)
         for elementType in range(len(self.elementList)):
             if self.elementList[elementType] == elementName:
