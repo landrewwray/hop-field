@@ -127,8 +127,8 @@ class ConfigTerms:
                     if pair[2] < theTerm.maxDist: # correct name?? # check if the pair distance is correct
                         if theConfigsWrapper.elementsList[molPl][pair[0]] == theTerm.element0 && theConfigsWrapper.elementsList[molPl][pair[1]] == theTerm.element1: # orbital symmetry check
                             matElement = theTerm.curve.readVal(pair[2])
-                            pert0 = self.makeCFpert(pair[0], matElement, theUM.termsList[7].term[1])
-                            pert1 = self.makeCFpert(pair[1], matElement, theUM.termsList[7].term[1]) # perturb the orbitals for both atoms in the pair
+                            pert0 = self.makeCFpert(pair, matElement, orbSym, molPl)
+                            pert1 = self.makeCFpert(pair, matElement, orbSym, molPl) # perturb the orbitals for both atoms in the pair
                             matElements += [pert0, pert1]
                      distortions += [matElements]
                 bonds += [distortions]
@@ -161,10 +161,12 @@ class ConfigTerms:
         
         # *** Now convert to a sparse matrix and add the correct index for thePair[0] and indexOrb from self.hmatIndex
         indexOrb=orbSym[0][0]
-        orbitalBinary = 0
+        orbital = 0 # default for 's' orbital
         
+        if indexOrb == 'p':
+            orbitalBinary = 1
         
-        self.hmatIndex[molPl][thePair[0]] # one more index needed: [***last index is 0 for indexOrb=='s' and 1 for indexOrb=='p']
+        self.hmatIndex[molPl][thePair[0]][orbital] # one more index needed: [***last index is 0 for indexOrb=='s' and 1 for indexOrb=='p']
 
         
     def singleRot(self,axisDir,theOrb):        
