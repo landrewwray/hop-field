@@ -110,17 +110,17 @@ class ConfigTerms:
         
         #***check that _makeSingleAtomHmatTerms is compatible with distortList format
         distortions = []
-                for pair in distortion:
-                    matElements = []
-                    if pair[2] < theTerm.maxDist: # correct name?? # check if the pair distance is correct
-                        if theConfigsWrapper.elementsList[molPl][pair[0]] == theTerm.element0 && theConfigsWrapper.elementsList[molPl][pair[1]] == theTerm.element1: # orbital symmetry check
-                            matElement = theTerm.curve.readVal(pair[2])
-                            pert0 = self.makeCFpert(pair[0], matElement, theUM.termsList[7].term[1])
-                            pert1 = self.makeCFpert(pair[1], matElement, theUM.termsList[7].term[1])
-                            pert1 = self.makeCFpert(pair[1], matElement, theUM.termsList[7].term[1]) # perturb the orbitals for both atoms in the pair
-                            matElements += [pert0, pert1]
-                        distortions += [matElements]
-                bonds += [distortions]
+        # for pair in distortion:
+        #     matElements = []
+        #     if pair[2] < theTerm.maxDist: # correct name?? # check if the pair distance is correct
+        #         if theConfigsWrapper.elementsList[molPl][pair[0]] == theTerm.element0 && theConfigsWrapper.elementsList[molPl][pair[1]] == theTerm.element1: # orbital symmetry check
+        #             matElement = theTerm.curve.readVal(pair[2])
+        #             pert0 = self.makeCFpert(pair[0], matElement, theUM.termsList[7].term[1])
+        #             pert1 = self.makeCFpert(pair[1], matElement, theUM.termsList[7].term[1])
+        #             pert1 = self.makeCFpert(pair[1], matElement, theUM.termsList[7].term[1]) # perturb the orbitals for both atoms in the pair
+        #             matElements += [pert0, pert1]
+        #         distortions += [matElements]
+        # bonds += [distortions]
         return None
     
     def makeCFpert(self,thePair,theME,orbSym):
@@ -135,7 +135,10 @@ class ConfigTerms:
         """
         
         pass
+    
+    def  getAxisDir (self, molPl, distortBondNum, theConfigsWrapper):
         
+        pass
     def makeRotMat(self,axisDir,orbBasis):
         """
         
@@ -249,7 +252,7 @@ class ConfigTerms:
     def findPairs(self, theConfigsWrapper, maxDist, molPl):
         #Loops through every atom pair in every distortion on every chosen bond in every molecule to find pairs under maxDist.
 
-        #Returns bondPairs[distortBondNum][distortionNum_0_thru_4][pairNum][atom_1_or_2_or_dist]
+        #Returns bondPairs[distortBondNum][distortionNum_0_thru_4][pairNum][atom_1_or_2_or_dist_or_direction]
         
         #***Partially tested.  Dimensions and output look reasonable.
 
@@ -261,8 +264,9 @@ class ConfigTerms:
                 for indexOne in range(len(theConfigsWrapper.distortLists[molPl][chosenBondIndex][distortionIndex])):
                     for indexTwo in (range(indexOne+1, len(theConfigsWrapper.distortLists[molPl][chosenBondIndex][distortionIndex]))):
                              dist = np.linalg.norm(theConfigsWrapper.distortLists[molPl][chosenBondIndex][distortionIndex][indexOne] - theConfigsWrapper.distortLists[molPl][chosenBondIndex][distortionIndex][indexTwo])
+                             axisDir = theConfigsWrapper.distortLists[molPl][chosenBondIndex][distortionIndex][indexOne] - theConfigsWrapper.distortLists[molPl][chosenBondIndex][distortionIndex][indexTwo]
                              if dist <= maxDist:
-                                 distortionPairs += [[indexOne, indexTwo, dist]]
+                                 distortionPairs += [[indexOne, indexTwo, dist, axisDir]]
                 singleBondPairs += [distortionPairs]
             
             bondPairs += [singleBondPairs]
