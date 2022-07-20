@@ -30,7 +30,7 @@ class ConfigTerms:
             
             
     def _makeOrbDefs(self):
-        self.orbDefs = {'p': {'sigma': np.asarray([[0,0,1]]),'pi': np.asarray([[1,0,0],[0,1,0]])}, 's': {'sigma': np.asarray([[1]])}, 'sp': {'sigma': np.asarray([[0,0,0,1], [0,0,0,0], [0,0,0,0], [1,0,0,0]])}}
+        self.orbDefs = {'p': {'sigma': np.asarray([[0,0,1]]),'pi': np.asarray([[1,0,0],[0,1,0]])}, 's': {'sigma': np.asarray([[1]])}, 'sp': {'sigma': np.asarray([[1,0,0,1], [1,0,0,-1]])*2**-0.5}}
             
     def makeMElist(self,theConfigsWrapper,molPl):
         """ Creates the hamiltonian lists for each configuration
@@ -126,18 +126,34 @@ class ConfigTerms:
                 distortions = []
                 for pair in distortion:
                     matElements = []
+                    pair_v2=self.makeSwappedPair(pair)
+                    
                     if pair[2] < self.UM.maxDist: # correct name?? # check if the pair distance is correct
                         if theConfigsWrapper.elementsLists[molPl][pair[0]] == theTerm.element0 and (theConfigsWrapper.elementsLists[molPl][pair[1]] == theTerm.element1): # orbital symmetry check
                             
                             pert0 = self.makeCFpert(pair, orbSym, molPl, theConfigsWrapper, theTerm)
                             # pert1 = self.makeCFpert(pair, orbSym, molPl) # perturb the orbitals for both atoms in the pair
                             matElements += [pert0]
+                        
+                        if theConfigsWrapper.elementsLists[molPl][pair_v2[0]] == theTerm.element0 and (theConfigsWrapper.elementsLists[molPl][pair_v2[1]] == theTerm.element1): # orbital symmetry check
+                            
+                            pert0 = self.makeCFpert(pair_v2, orbSym, molPl, theConfigsWrapper, theTerm)
+                            # pert1 = self.makeCFpert(pair, orbSym, molPl) # perturb the orbitals for both atoms in the pair
+                            matElements += [pert0]
+                        
                     distortions += [matElements]
                 bonds += [distortions]
         coulombTermsList += [bonds]
 
         return coulombTermsList
         # return None
+        
+    def makeSwappedPair(self,thePair):
+        """Swap the order of atoms in the pair. 
+        
+        Swap elements 0 and 1, and reverse the direction of the vector
+        """
+        
     
     def makeCFpert(self,thePair,orbSym,molPl, theConfigsWrapper, theTerm):
         """***Not yet tested! Create the orbital perturbation matrix elements
@@ -153,7 +169,7 @@ class ConfigTerms:
         
         rotMat = self.singleRot(thePair[3],orbSym[0])
         
-        matElement = theTerm.curve.readVal(thePair[2])
+
         
         theOrbVectors=self.orbDefs[orbSym[0]][orbSym[1]]
         matDim = theOrbVectors.shape[1]
@@ -161,19 +177,20 @@ class ConfigTerms:
         # Now build the term matrix
         theMat=np.zeros((matDim,matDim))
         for orbNum in range(theOrbVectors.shape[0]): #This np.asarray solution seems very clunky- it is because the factors were all "lists" before
-            theMat += np.asarray(rotMat).T @ (np.asarray([[theOrbVectors[orbNum,:].T @ theOrbVectors[orbNum,:]]])) @ np.asarray(rotMat)
+            theMat += rotMat.T @ (theOrbVectors[[orbNum],:].T @ theOrbVectors[[orbNum],:]) @ rotMat
             
              
         # *** Now convert to a sparse matrix and add the correct index for thePair[0] and indexOrb from self.hmatIndex
-        indexOrb=orbSym[0][0]
-        orbital = self.UM.getOrbSymNum(theConfigsWrapper.elementsLists[molPl][thePair[1]], indexOrb) # default for 's' orbital
+        indexOrb=orbSym[0][0] # turn 'sp' into 's' for indexing purposes
+        orbital = self.UM.getOrbSymNum(theConfigsWrapper.elementsLists[molPl][thePair[0]], indexOrb) # default for 's' orbital
 
         theMatSparse = sparse.coo_matrix(theMat)
         
-        theMatRow = theMatSparse.row + self.hmatIndex[molPl][thePair[0]][orbital] # sparse matrix elements with corrected row and column indices based on atom and orbital
-        theMatCol = theMatSparse.col + self.hmatIndex[molPl][thePair[0]][orbital]
-        theMatData = theMatSparse.data
-        return theMatSparse
+        theMatSparse.row += self.hmatIndex[molPl][thePair[0]][orbital] # sparse matrix elements with corrected row and column indices based on atom and orbital
+        theMatSparse.col += self.hmatIndex[molPl][thePair[0]][orbital]
+
+        # this is the ME call:  matElement = theTerm.curve.readVal(thePair[2])
+        return [theMatSparse, thePair[2]]  #return the sparse matrix and the distance needed for the call
        
         
          # one more index needed: [***last index is 0 for indexOrb=='s' and 1 for indexOrb=='p']
@@ -184,7 +201,7 @@ class ConfigTerms:
         # ***not yet tested for sp orbital
 
         if theOrb == 's':
-            return [1]
+            return np.asarray([1])
         if theOrb == 'p' or theOrb == 'sp':
             randomOrientation=np.random.rand(3)
             zPrime = axisDir/np.linalg.norm(axisDir)
