@@ -6,7 +6,7 @@ Created on Tue Jun 14 07:03:08 2022
 """
 
 import numpy as np
-
+from scipy import sparse
 class ConfigTerms:
     def __init__(self, theUM, theConfigsWrapper):
         """
@@ -30,7 +30,7 @@ class ConfigTerms:
             
             
     def _makeOrbDefs(self):
-        self.orbDefs = {'p': {'sigma': np.asarray([[0,0,1]]),'pi': np.asarray([[1,0,0],[0,1,0]])}, 's': {'sigma': np.asarray([[1]])}}
+        self.orbDefs = {'p': {'sigma': np.asarray([[0,0,1]]),'pi': np.asarray([[1,0,0],[0,1,0]])}, 's': {'sigma': np.asarray([[1]])}, 'sp': {'sigma': np.asarray([[0,0,0,1], [0,0,0,0], [0,0,0,0], [1,0,0,0]])}}
             
     def makeMElist(self,theConfigsWrapper,molPl):
         """ Creates the hamiltonian lists for each configuration
@@ -64,6 +64,7 @@ class ConfigTerms:
         # otherwise check theUM.termsList[theTermNum].hop (True/False) to see if it's a hopping term
         
         molMats=[] # molMats[termNum][distortNum][sparseMatNum][if_mat_0_if_call_1]
+        self._makeOrbDefs()
         for theTerm in self.UM.termsList:
             molMats+=[self._makeMolMats(theTerm,molPl,theConfigsWrapper)]
             
@@ -83,8 +84,9 @@ class ConfigTerms:
             return self._makeSingleAtomHmatTerms(theTerm,molPl,theConfigsWrapper)
                 # This returns a single list of terms, which applies for all distortions
                 
-        elif termType==1:
-            return self._make2AtomCoulombHmatTerms(theTerm,molPl,theConfigsWrapper)
+        elif termType==1: #Need to address 'E' energies for system-wide energy increase!
+            if theTerm.term[1] != 'E':
+                return self._make2AtomCoulombHmatTerms(theTerm,molPl,theConfigsWrapper)
                 # This returns list[distortBondNum][distortionNum_0_thru_4][list_ind0_ind1_matrixElement2]
                 
         elif termType==2:
@@ -124,20 +126,20 @@ class ConfigTerms:
                 distortions = []
                 for pair in distortion:
                     matElements = []
-                    if pair[2] < theTerm.maxDist: # correct name?? # check if the pair distance is correct
-                        if theConfigsWrapper.elementsList[molPl][pair[0]] == theTerm.element0 && theConfigsWrapper.elementsList[molPl][pair[1]] == theTerm.element1: # orbital symmetry check
-                            matElement = theTerm.curve.readVal(pair[2])
-                            pert0 = self.makeCFpert(pair, matElement, orbSym, molPl)
-                            pert1 = self.makeCFpert(pair, matElement, orbSym, molPl) # perturb the orbitals for both atoms in the pair
-                            matElements += [pert0, pert1]
-                     distortions += [matElements]
+                    if pair[2] < self.UM.maxDist: # correct name?? # check if the pair distance is correct
+                        if theConfigsWrapper.elementsLists[molPl][pair[0]] == theTerm.element0 and (theConfigsWrapper.elementsLists[molPl][pair[1]] == theTerm.element1): # orbital symmetry check
+                            
+                            pert0 = self.makeCFpert(pair, orbSym, molPl, theConfigsWrapper, theTerm)
+                            # pert1 = self.makeCFpert(pair, orbSym, molPl) # perturb the orbitals for both atoms in the pair
+                            matElements += [pert0]
+                    distortions += [matElements]
                 bonds += [distortions]
-         coulombTermsList += [bonds]
+        coulombTermsList += [bonds]
 
         return coulombTermsList
         # return None
     
-    def makeCFpert(self,thePair,theME,orbSym,molPl):
+    def makeCFpert(self,thePair,orbSym,molPl, theConfigsWrapper, theTerm):
         """***Not yet tested! Create the orbital perturbation matrix elements
         ***NOTE: theME needs to be looked up dynamically later, not multiplied onto these matrices!!!
         
@@ -151,22 +153,30 @@ class ConfigTerms:
         
         rotMat = self.singleRot(thePair[3],orbSym[0])
         
-        theOrbVectors=self.orbDefs[orbsym[0]][orbsym[1]]
+        matElement = theTerm.curve.readVal(thePair[2])
+        
+        theOrbVectors=self.orbDefs[orbSym[0]][orbSym[1]]
         matDim = theOrbVectors.shape[1]
         
         # Now build the term matrix
         theMat=np.zeros((matDim,matDim))
-        for orbNum in range(theOrbVectors.shape[0]):
-            theMat += rotMat @ (theOrbVectors[orbNum,:].T @ theOrbVectors[orbNum,:]) @ rotMat.T
-        
+        for orbNum in range(theOrbVectors.shape[0]): #This np.asarray solution seems very clunky- it is because the factors were all "lists" before
+            theMat += np.asarray(rotMat).T @ (np.asarray([[theOrbVectors[orbNum,:].T @ theOrbVectors[orbNum,:]]])) @ np.asarray(rotMat)
+            
+             
         # *** Now convert to a sparse matrix and add the correct index for thePair[0] and indexOrb from self.hmatIndex
         indexOrb=orbSym[0][0]
-        orbital = 0 # default for 's' orbital
+        orbital = self.UM.getOrbSymNum(theConfigsWrapper.elementsLists[molPl][thePair[1]], indexOrb) # default for 's' orbital
+
+        theMatSparse = sparse.coo_matrix(theMat)
         
-        if indexOrb == 'p':
-            orbitalBinary = 1
+        theMatRow = theMatSparse.row + self.hmatIndex[molPl][thePair[0]][orbital] # sparse matrix elements with corrected row and column indices based on atom and orbital
+        theMatCol = theMatSparse.col + self.hmatIndex[molPl][thePair[0]][orbital]
+        theMatData = theMatSparse.data
+        return theMatSparse
+       
         
-        self.hmatIndex[molPl][thePair[0]][orbital] # one more index needed: [***last index is 0 for indexOrb=='s' and 1 for indexOrb=='p']
+         # one more index needed: [***last index is 0 for indexOrb=='s' and 1 for indexOrb=='p']
 
         
     def singleRot(self,axisDir,theOrb):        
