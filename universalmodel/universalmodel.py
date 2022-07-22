@@ -16,7 +16,7 @@ Develpment notes (Jun 15 2022):
 @author: lawray
 """
 import universalmodel.sigmoidcurve as sc
-
+import numpy as np
 
 def findAt(filePath):
     # find @ symbols
@@ -154,6 +154,10 @@ class UniversalModel:
             self.termsList += [Hterm(self.elementList[0],[nextTerm])]
             orbSymList+=[[nextTerm[0], int(nextTerm[4])]]
         self.orbSyms = [orbSymList]
+        
+        # theDict = []
+        # for dictInd in range(self.orbSyms):
+        #     theDict+=
 
     def makeCrossTerms(self,allowedTypes,termFile):
         """***!!! Need to test + avoid creating equivalent terms!  
@@ -192,8 +196,17 @@ class UniversalModel:
                     #Hopping terms:
                     if pl2>=pl1:  #avoid double counting
                         for nextTerm in hopList:
+                            print('here!')
                             if nextTerm[0]==self.elementList[pl2] or nextTerm[0]=='X':
-                                if ((nextTerm[2] in self.orbSyms[pl1]) and (nextTerm[3] in self.orbSyms[pl2])) or ((nextTerm[2] in self.orbSyms[pl2]) and (nextTerm[3] in self.orbSyms[pl1])):
+                                print('here2!')
+                                print(nextTerm)
+                                print(self.orbSyms[pl1])
+                                print(self.orbSyms[pl2])
+                                
+                                orbSyms1=np.asarray(self.orbSyms[pl1])[:,0]
+                                orbSyms2=np.asarray(self.orbSyms[pl2])[:,0]
+                                if ((nextTerm[2] in orbSyms1) and (nextTerm[3] in orbSyms2)) or ((nextTerm[2] in orbSyms2) and (nextTerm[3] in orbSyms1)):
+                                    print('here3!')
                                     self.termsList += [Hterm(self.elementList[pl1],self.elementList[pl2],[nextTerm],True)]
                                     
                                     if self.termsList[-1].curve.dMax > self.maxDist: #keep track of the maximum interaction distance
@@ -205,8 +218,10 @@ class UniversalModel:
     def pruneTermsList(self):
         # Remove unnecessary terms from self.termsList - there are still 
         pass
+    
     def getOrbSymNum(self,elementName,orbName):
         #get the index of an orbital type for a specific element (the 's' and 'p' orbitals of C have indices 0 and 1)
+        #this could be faster and more flexible as a dictionary!
         for elementType in range(len(self.elementList)):
             if self.elementList[elementType] == elementName:
                 #now find the orbital
