@@ -93,7 +93,7 @@ class ConfigTerms:
             return None
         
     def _makeHoppingTerms(self, theTerm, molPl, theConfigsWrapper):
-        orbSym=theTerm.term[1:3] # for calling makeHop #NOTE: Not all theTerm.term arrays have ['s'/'p'/'sp', 'sigma'/'pi'] for the indices theTerm.term[1:3]
+        orbSym=theTerm.term[1:4] # for calling makeHop #NOTE: Not all theTerm.term arrays have ['s'/'p'/'sp', 'sigma'/'pi'] for the indices theTerm.term[1:3]
         hoppingTermsList = []
         for chosenBond in self.pairsList[molPl]:
             bonds = []
@@ -122,7 +122,33 @@ class ConfigTerms:
         return hoppingTermsList
         
     def makeHop(self,thePair,orbSym,molPl, theConfigsWrapper, theTerm):
+        rotMat = self.singleRot(thePair[3],orbSym[0])
         
+
+        
+        firstOrbVector=self.orbDefs[orbSym[1]][orbSym[0]] # Use two orbital definitions
+        secondOrbVector=self.orbDefs[orbSym[2]][orbSym[0]]
+        matDimRow = firstOrbVector.shape[1] # what should the matDim be?
+        matDimCol = secondOrbVector.shape[1]
+        
+        # Now build the term matrix
+        theMat=np.zeros((matDim,matDim))
+        for orbNum in range(firstOrbVector.shape[0]):
+            theMat += rotMat.T @ (secondOrbVector[[orbNum],:].T @ firstOrbVector[[orbNum],:]) @ rotMat # eg: |s><p|
+            
+             
+        # *** Now convert to a sparse matrix and add the correct index for thePair[0] and indexOrb from self.hmatIndex
+        indexOrb=orbSym[0][0] # turn 'sp' into 's' for indexing purposes
+        orbital = self.UM.getOrbSymNum(theConfigsWrapper.elementsLists[molPl][thePair[0]], indexOrb) # default for 's' orbital
+
+        theMatSparse = sparse.coo_matrix(theMat)
+        
+        theMatSparse.row += self.hmatIndex[molPl][thePair[0]][orbital] # sparse matrix elements with corrected row and column indices based on atom and orbital
+        theMatSparse.col += self.hmatIndex[molPl][thePair[0]][orbital]
+
+        # this is the ME call:  matElement = theTerm.curve.readVal(thePair[2])
+        return [theMatSparse, thePair[2]]  #return the sparse matrix and the distance needed for the call
+       
         return None
         
     def _make2AtomCoulombHmatTerms(self,theTerm,molPl,theConfigsWrapper):
