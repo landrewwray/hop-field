@@ -92,6 +92,39 @@ class ConfigTerms:
         elif termType==2:
             return None
         
+    def _makeHoppingTerms(self, theTerm, molPl, theConfigsWrapper):
+        orbSym=theTerm.term[1:3] # for calling makeHop #NOTE: Not all theTerm.term arrays have ['s'/'p'/'sp', 'sigma'/'pi'] for the indices theTerm.term[1:3]
+        hoppingTermsList = []
+        for chosenBond in self.pairsList[molPl]:
+            bonds = []
+            for distortion in chosenBond:
+                distortions = []
+                for pair in distortion:
+                    matElements = []
+                    pair_v2=self.makeSwappedPair(pair)
+
+                    if pair[2] < self.UM.maxDist: # correct name?? # check if the pair distance is correct
+                        if theConfigsWrapper.elementsLists[molPl][pair[0]] == theTerm.element0 and (theConfigsWrapper.elementsLists[molPl][pair[1]] == theTerm.element1): # orbital symmetry check
+                            
+                            hop0 = self.makeHop(pair, orbSym, molPl, theConfigsWrapper, theTerm)
+                            # pert1 = self.makeCFpert(pair, orbSym, molPl) # perturb the orbitals for both atoms in the pair
+                            matElements += [hop0]
+                        
+                        if theConfigsWrapper.elementsLists[molPl][pair_v2[0]] == theTerm.element0 and (theConfigsWrapper.elementsLists[molPl][pair_v2[1]] == theTerm.element1): # orbital symmetry check
+                            
+                            hop1 = self.makeHop(pair_v2, orbSym, molPl, theConfigsWrapper, theTerm)
+                            # pert1 = self.makeCFpert(pair, orbSym, molPl) # perturb the orbitals for both atoms in the pair
+                            matElements += [hop1]
+                        
+                    distortions += [matElements]
+                bonds += [distortions]
+        hoppingTermsList += [bonds]
+        return hoppingTermsList
+        
+    def makeHop(self,thePair,orbSym,molPl, theConfigsWrapper, theTerm):
+        
+        return None
+        
     def _make2AtomCoulombHmatTerms(self,theTerm,molPl,theConfigsWrapper):
         """***NOTE: theME needs to be looked up dynamically later, not multiplied onto these matrices!!!
         
@@ -119,7 +152,6 @@ class ConfigTerms:
         
         orbSym=theTerm.term[1:3] # for calling makeCFpert #NOTE: Not all theTerm.term arrays have ['s'/'p'/'sp', 'sigma'/'pi'] for the indices theTerm.term[1:3]
         coulombTermsList = []
-
         for chosenBond in self.pairsList[molPl]:
             bonds = []
             for distortion in chosenBond:
@@ -127,7 +159,7 @@ class ConfigTerms:
                 for pair in distortion:
                     matElements = []
                     pair_v2=self.makeSwappedPair(pair)
-                    
+
                     if pair[2] < self.UM.maxDist: # correct name?? # check if the pair distance is correct
                         if theConfigsWrapper.elementsLists[molPl][pair[0]] == theTerm.element0 and (theConfigsWrapper.elementsLists[molPl][pair[1]] == theTerm.element1): # orbital symmetry check
                             
@@ -137,14 +169,13 @@ class ConfigTerms:
                         
                         if theConfigsWrapper.elementsLists[molPl][pair_v2[0]] == theTerm.element0 and (theConfigsWrapper.elementsLists[molPl][pair_v2[1]] == theTerm.element1): # orbital symmetry check
                             
-                            pert0 = self.makeCFpert(pair_v2, orbSym, molPl, theConfigsWrapper, theTerm)
+                            pert1 = self.makeCFpert(pair_v2, orbSym, molPl, theConfigsWrapper, theTerm)
                             # pert1 = self.makeCFpert(pair, orbSym, molPl) # perturb the orbitals for both atoms in the pair
-                            matElements += [pert0]
+                            matElements += [pert1]
                         
                     distortions += [matElements]
                 bonds += [distortions]
         coulombTermsList += [bonds]
-
         return coulombTermsList
         # return None
         
@@ -154,6 +185,7 @@ class ConfigTerms:
         Swap elements 0 and 1, and reverse the direction of the vector
         """
         
+        return([thePair[1], thePair[0], thePair[2], -1*thePair[3]])
     
     def makeCFpert(self,thePair,orbSym,molPl, theConfigsWrapper, theTerm):
         """***Not yet tested! Create the orbital perturbation matrix elements
@@ -176,7 +208,7 @@ class ConfigTerms:
         
         # Now build the term matrix
         theMat=np.zeros((matDim,matDim))
-        for orbNum in range(theOrbVectors.shape[0]): #This np.asarray solution seems very clunky- it is because the factors were all "lists" before
+        for orbNum in range(theOrbVectors.shape[0]):
             theMat += rotMat.T @ (theOrbVectors[[orbNum],:].T @ theOrbVectors[[orbNum],:]) @ rotMat
             
              
