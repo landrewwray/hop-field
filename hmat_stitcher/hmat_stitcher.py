@@ -113,7 +113,8 @@ class ConfigTerms:
                         if theConfigsWrapper.elementsLists[molPl][pair_v2[0]] == theTerm.element0 and (theConfigsWrapper.elementsLists[molPl][pair_v2[1]] == theTerm.element1): # orbital symmetry check
                             
                             hop1 = self.makeHop(pair_v2, orbSym, molPl, theConfigsWrapper, theTerm)
-                            # pert1 = self.makeCFpert(pair, orbSym, molPl) # perturb the orbitals for both atoms in the pair
+                            #
+                            pert1 = self.makeCFpert(pair, orbSym, molPl) # perturb the orbitals for both atoms in the pair
                             matElements += [hop1]
                         
                     distortions += [matElements]
@@ -149,7 +150,7 @@ class ConfigTerms:
         # this is the ME call:  matElement = theTerm.curve.readVal(thePair[2])
         return [theMatSparse, thePair[2]]  #return the sparse matrix and the distance needed for the call
        
-        return None
+        # return None
         
     def _make2AtomCoulombHmatTerms(self,theTerm,molPl,theConfigsWrapper):
         """***NOTE: theME needs to be looked up dynamically later, not multiplied onto these matrices!!!
