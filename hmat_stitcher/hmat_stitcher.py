@@ -3,6 +3,12 @@
 """
 Created on Tue Jun 14 07:03:08 2022
 @author: lawray
+
+Develpment notes (July 25 2022):
+    1. The 'E' option is currently not implemented for atomic Coulomb interactions.  Relevant code is 
+    found in _makeMolMats for termType==1
+
+@author: lawray
 """
 
 import numpy as np
@@ -85,12 +91,12 @@ class ConfigTerms:
                 # This returns a single list of terms, which applies for all distortions
                 
         elif termType==1: #Need to address 'E' energies for system-wide energy increase!
-            if theTerm.term[1] != 'E':
+            if theTerm.term[2] != 'E':
                 return self._make2AtomCoulombHmatTerms(theTerm,molPl,theConfigsWrapper)
                 # This returns list[distortBondNum][distortionNum_0_thru_4][list_ind0_ind1_matrixElement2]
                 
         elif termType==2:
-            return None
+            return self._makeHoppingTerms(theTerm, molPl, theConfigsWrapper) # check output!
         
     def _makeHoppingTerms(self, theTerm, molPl, theConfigsWrapper):
         orbSym=theTerm.term[1:4] # for calling makeHop #NOTE: Not all theTerm.term arrays have ['s'/'p'/'sp', 'sigma'/'pi'] for the indices theTerm.term[1:3]
@@ -100,57 +106,64 @@ class ConfigTerms:
             for distortion in chosenBond:
                 distortions = []
                 for pair in distortion:
-                    matElements = []
                     pair_v2=self.makeSwappedPair(pair)
 
                     if pair[2] < self.UM.maxDist: # correct name?? # check if the pair distance is correct
                         if theConfigsWrapper.elementsLists[molPl][pair[0]] == theTerm.element0 and (theConfigsWrapper.elementsLists[molPl][pair[1]] == theTerm.element1): # orbital symmetry check
                             
                             hop0 = self.makeHop(pair, orbSym, molPl, theConfigsWrapper, theTerm)
-                            # pert1 = self.makeCFpert(pair, orbSym, molPl) # perturb the orbitals for both atoms in the pair
-                            matElements += [hop0]
+                            distortions += [hop0]
                         
-                        if theConfigsWrapper.elementsLists[molPl][pair_v2[0]] == theTerm.element0 and (theConfigsWrapper.elementsLists[molPl][pair_v2[1]] == theTerm.element1): # orbital symmetry check
+                        elif theConfigsWrapper.elementsLists[molPl][pair_v2[0]] == theTerm.element0 and (theConfigsWrapper.elementsLists[molPl][pair_v2[1]] == theTerm.element1): # orbital symmetry check
                             
                             hop1 = self.makeHop(pair_v2, orbSym, molPl, theConfigsWrapper, theTerm)
-                            #
-                            pert1 = self.makeCFpert(pair, orbSym, molPl) # perturb the orbitals for both atoms in the pair
-                            matElements += [hop1]
+                            distortions += [hop1]
                         
-                    distortions += [matElements]
                 bonds += [distortions]
-        hoppingTermsList += [bonds]
+            hoppingTermsList += [bonds]
         return hoppingTermsList
+        # coulombTermsList[distortedBondNum][distortion_type][pair(not ordered)][0_sparseMat____1_distance_call_argument]
         
     def makeHop(self,thePair,orbSym,molPl, theConfigsWrapper, theTerm):
-        rotMat = self.singleRot(thePair[3],orbSym[0])
+        #not yet tested
         
-
+        rotMat1 = self.singleRot(thePair[3],orbSym[1])
+        if orbSym[2] != orbSym[1]:
+            rotMat2 = self.singleRot(thePair[3],orbSym[2])
+        else: 
+            rotMat2 = rotMat1
         
         firstOrbVector=self.orbDefs[orbSym[1]][orbSym[0]] # Use two orbital definitions
         secondOrbVector=self.orbDefs[orbSym[2]][orbSym[0]]
-        matDimRow = firstOrbVector.shape[1] # what should the matDim be?
-        matDimCol = secondOrbVector.shape[1]
+        
+        matDimRow = firstOrbVector.shape[1]    # width of a row
+        matDimCol = secondOrbVector.shape[1]   # width of a col
         
         # Now build the term matrix
-        theMat=np.zeros((matDim,matDim))
+        theMat=np.zeros((matDimCol,matDimRow))
         for orbNum in range(firstOrbVector.shape[0]):
-            theMat += rotMat.T @ (secondOrbVector[[orbNum],:].T @ firstOrbVector[[orbNum],:]) @ rotMat # eg: |s><p|
+            theMat += rotMat2.T @ (secondOrbVector[[orbNum],:].T @ firstOrbVector[[orbNum],:]) @ rotMat1 # eg: |s><p|
             
-             
         # *** Now convert to a sparse matrix and add the correct index for thePair[0] and indexOrb from self.hmatIndex
-        indexOrb=orbSym[0][0] # turn 'sp' into 's' for indexing purposes
-        orbital = self.UM.getOrbSymNum(theConfigsWrapper.elementsLists[molPl][thePair[0]], indexOrb) # default for 's' orbital
+        indexOrbRow=orbSym[1][0] # turn 'sp' into 's' for indexing purposes
+        orbitalRow = self.UM.getOrbSymNum(theConfigsWrapper.elementsLists[molPl][thePair[0]], indexOrbRow) # default for 's' orbital
+        indexOrbCol=orbSym[2][0] # turn 'sp' into 's' for indexing purposes
+        orbitalCol = self.UM.getOrbSymNum(theConfigsWrapper.elementsLists[molPl][thePair[1]], indexOrbCol) # default for 's' orbital
 
         theMatSparse = sparse.coo_matrix(theMat)
         
-        theMatSparse.row += self.hmatIndex[molPl][thePair[0]][orbital] # sparse matrix elements with corrected row and column indices based on atom and orbital
-        theMatSparse.col += self.hmatIndex[molPl][thePair[0]][orbital]
+        theMatSparse.row += self.hmatIndex[molPl][thePair[0]][orbitalRow] # sparse matrix elements with corrected row and column indices based on atom and orbital
+        theMatSparse.col += self.hmatIndex[molPl][thePair[1]][orbitalCol]
 
+        # Add reverse hopping:
+        if theMatSparse.data.dtype=='complex':
+            theMatSparse += theMatSparse.T.conj
+        else:
+            theMatSparse += theMatSparse.T
+            
         # this is the ME call:  matElement = theTerm.curve.readVal(thePair[2])
         return [theMatSparse, thePair[2]]  #return the sparse matrix and the distance needed for the call
        
-        # return None
         
     def _make2AtomCoulombHmatTerms(self,theTerm,molPl,theConfigsWrapper):
         """***NOTE: theME needs to be looked up dynamically later, not multiplied onto these matrices!!!
@@ -184,7 +197,6 @@ class ConfigTerms:
             for distortion in chosenBond:
                 distortions = []
                 for pair in distortion:
-                    matElements = []
                     pair_v2=self.makeSwappedPair(pair)
 
                     if pair[2] < self.UM.maxDist: # correct name?? # check if the pair distance is correct
@@ -192,19 +204,19 @@ class ConfigTerms:
                             
                             pert0 = self.makeCFpert(pair, orbSym, molPl, theConfigsWrapper, theTerm)
                             # pert1 = self.makeCFpert(pair, orbSym, molPl) # perturb the orbitals for both atoms in the pair
-                            matElements += [pert0]
+                            distortions += [pert0]
                         
                         if theConfigsWrapper.elementsLists[molPl][pair_v2[0]] == theTerm.element0 and (theConfigsWrapper.elementsLists[molPl][pair_v2[1]] == theTerm.element1): # orbital symmetry check
                             
                             pert1 = self.makeCFpert(pair_v2, orbSym, molPl, theConfigsWrapper, theTerm)
                             # pert1 = self.makeCFpert(pair, orbSym, molPl) # perturb the orbitals for both atoms in the pair
-                            matElements += [pert1]
+                            distortions += [pert1]
                         
-                    distortions += [matElements]
-                bonds += [distortions]
-        coulombTermsList += [bonds]
-        return coulombTermsList
-        # return None
+                bonds += [distortions]        
+            coulombTermsList += [bonds]
+            
+        return coulombTermsList  
+        # coulombTermsList[distortedBondNum][distortion_type][pair(not ordered)][0_sparseMat____1_distance_call_argument]
         
     def makeSwappedPair(self,thePair):
         """Swap the order of atoms in the pair. 
@@ -226,11 +238,9 @@ class ConfigTerms:
         Returns a list representing a Hermetian sub-matrix
         """
         
-        rotMat = self.singleRot(thePair[3],orbSym[0])
-        
+        rotMat = self.singleRot(thePair[3],orbSym[1])
 
-        
-        theOrbVectors=self.orbDefs[orbSym[0]][orbSym[1]]
+        theOrbVectors=self.orbDefs[orbSym[1]][orbSym[0]]
         matDim = theOrbVectors.shape[1]
         
         # Now build the term matrix
@@ -240,7 +250,7 @@ class ConfigTerms:
             
              
         # *** Now convert to a sparse matrix and add the correct index for thePair[0] and indexOrb from self.hmatIndex
-        indexOrb=orbSym[0][0] # turn 'sp' into 's' for indexing purposes
+        indexOrb=orbSym[1][0] # turn 'sp' into 's' for indexing purposes
         orbital = self.UM.getOrbSymNum(theConfigsWrapper.elementsLists[molPl][thePair[0]], indexOrb) # default for 's' orbital
 
         theMatSparse = sparse.coo_matrix(theMat)
