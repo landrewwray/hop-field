@@ -196,17 +196,11 @@ class UniversalModel:
                     #Hopping terms:
                     if pl2>=pl1:  #avoid double counting
                         for nextTerm in hopList:
-                            # print('here!')
                             if nextTerm[0]==self.elementList[pl2] or nextTerm[0]=='X':
-                                # print('here2!')
-                                # print(nextTerm)
-                                # print(self.orbSyms[pl1])
-                                # print(self.orbSyms[pl2])
                                 
                                 orbSyms1=np.asarray(self.orbSyms[pl1])[:,0]
                                 orbSyms2=np.asarray(self.orbSyms[pl2])[:,0]
                                 if ((nextTerm[2] in orbSyms1) and (nextTerm[3] in orbSyms2)) or ((nextTerm[2] in orbSyms2) and (nextTerm[3] in orbSyms1)):
-                                    # print('here3!')
                                     self.termsList += [Hterm(self.elementList[pl1],self.elementList[pl2],[nextTerm],True)]
                                     
                                     if self.termsList[-1].curve.dMax > self.maxDist: #keep track of the maximum interaction distance
