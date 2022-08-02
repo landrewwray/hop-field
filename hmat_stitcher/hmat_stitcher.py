@@ -103,6 +103,7 @@ class ConfigTerms:
         hoppingTermsList = []
         for chosenBond in self.pairsList[molPl]:
             bonds = []
+ 
             for distortion in chosenBond:
                 distortions = []
                 for pair in distortion:
@@ -126,7 +127,7 @@ class ConfigTerms:
         
     def makeHop(self,thePair,orbSym,molPl, theConfigsWrapper, theTerm):
         #not yet tested
-        
+        print(orbSym)
         rotMat1 = self.singleRot(thePair[3],orbSym[1])
         if orbSym[2] != orbSym[1]:
             rotMat2 = self.singleRot(thePair[3],orbSym[2])
@@ -149,20 +150,36 @@ class ConfigTerms:
         orbitalRow = self.UM.getOrbSymNum(theConfigsWrapper.elementsLists[molPl][thePair[0]], indexOrbRow) # default for 's' orbital
         indexOrbCol=orbSym[2][0] # turn 'sp' into 's' for indexing purposes
         orbitalCol = self.UM.getOrbSymNum(theConfigsWrapper.elementsLists[molPl][thePair[1]], indexOrbCol) # default for 's' orbital
-
+        print(orbitalRow)
         theMatSparse = sparse.coo_matrix(theMat)
+        print(theMatSparse)
+        print(theMatSparse.data)
+        print(theMatSparse.row)
         
         theMatSparse.row += self.hmatIndex[molPl][thePair[0]][orbitalRow] # sparse matrix elements with corrected row and column indices based on atom and orbital
         theMatSparse.col += self.hmatIndex[molPl][thePair[1]][orbitalCol]
+        theMatSparse.resize((self.hmatIndex[molPl][-1],self.hmatIndex[molPl][-1]))
 
+        print(theMatSparse.row)
+        print(theMatSparse.col)
+        
+        newDim = self.hmatIndex[molPl][thePair[0]][orbitalRow] + self.hmatIndex[molPl][thePair[1]][orbitalCol] + 100
+        
         # Add reverse hopping:
         if theMatSparse.data.dtype=='complex':
             theMatSparse += theMatSparse.T.conj
+            # sparse.vstack(theMatSparse, theMatSparse.T.conj)
         else:
             theMatSparse += theMatSparse.T
-            
+            # sparse.vstack(theMatSparse, theMatSparse.T)
+        print(theMatSparse.row)
+        print(self.hmatIndex[molPl][thePair[0]][orbitalRow])
+        theMatSparseFullIndex = sparse.coo_matrix((theMatSparse.data, (np.array([self.hmatIndex[molPl][thePair[0]][orbitalRow]]), (np.array([self.hmatIndex[molPl][thePair[0]][orbitalCol]]) ))), shape=(self.hmatIndex[molPl][thePair[0]][orbitalRow],self.hmatIndex[molPl][thePair[0]][orbitalCol]))
+        print(theMatSparseFullIndex)
+        # theMatSparse.row += self.hmatIndex[molPl][thePair[0]][orbitalRow] # sparse matrix elements with corrected row and column indices based on atom and orbital
+        # theMatSparse.col += self.hmatIndex[molPl][thePair[1]][orbitalCol]    
         # this is the ME call:  matElement = theTerm.curve.readVal(thePair[2])
-        return [theMatSparse, thePair[2]]  #return the sparse matrix and the distance needed for the call
+        return [theMatSparseFullIndex, thePair[2]]  #return the sparse matrix and the distance needed for the call
        
         
     def _make2AtomCoulombHmatTerms(self,theTerm,molPl,theConfigsWrapper):
@@ -257,6 +274,7 @@ class ConfigTerms:
         
         theMatSparse.row += self.hmatIndex[molPl][thePair[0]][orbital] # sparse matrix elements with corrected row and column indices based on atom and orbital
         theMatSparse.col += self.hmatIndex[molPl][thePair[0]][orbital]
+        theMatSparse.resize((self.hmatIndex[molPl][-1],self.hmatIndex[molPl][-1]))
 
         # this is the ME call:  matElement = theTerm.curve.readVal(thePair[2])
         return [theMatSparse, thePair[2]]  #return the sparse matrix and the distance needed for the call
@@ -360,7 +378,8 @@ class ConfigTerms:
                     break # found the element in the UM
                     
             molOrbsIndexList += [atomInds]
-            
+            molOrbsIndexList += [indexPl]   # molOrbsIndexList[-1] is the dimensionality of the Hamiltonia
+        print(molOrbsIndexList)
         return molOrbsIndexList
         
        
