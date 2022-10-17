@@ -12,7 +12,7 @@ from os import listdir
 import copy
 import glob
 # import tightBinding as tbi
-
+import load_create_mol.config_wrapper as wrapper
     
     
 ######################################################
@@ -48,18 +48,53 @@ def loadFile(filePath):
     
     return atoms_list, coords_arry, bonds_arry
 
-def loadMol(folder):
+def loadMol(folder, sizeCap=-1, moleculesToLoad = []):
     # atomsLists, bondsArrays, coordsArrays = loadMol("Molecular Structure Data/*.mol2")
     
     nameGlob=glob.glob(folder)
     if not len(nameGlob):
         print('Error!  No molecule files found in path: ' + folder)
+    
+    nameGlob.sort()    # alphabetical order
+    
+    moleculesList = []
+    listPl=0
+    for filename in nameGlob:
+        #moleculesList += [loadFile(filename)] 
         
-    moleculesList = [loadFile(filename) for filename in nameGlob]
+        if len(moleculesToLoad)>0:  
+            if len(moleculesList) >= len(moleculesToLoad):
+                break
+            elif moleculesToLoad[listPl] == 1:
+                moleculesList += [loadFile(filename)] 
+                
+            listPl += 1
+        else: # len(moleculesToLoad) == 0 will load all molecules
+            moleculesList += [loadFile(filename)] 
 
     atomsLists = [molecule[0] for molecule in moleculesList]
     coordsArrays = [molecule[1] for molecule in moleculesList]
     bondsArrays = [molecule[2] for molecule in moleculesList]
     
-    return(atomsLists, bondsArrays, coordsArrays)
+    print(sizeCap)
+    if sizeCap > 0: # if there is a cap on the number of atoms, then remove
+        pl=0        # molecules that exceed the cap:
+        while pl<len(atomsLists):
+            if len(atomsLists[pl]) > sizeCap:
+                atomsLists.pop(pl)
+                coordsArrays.pop(pl)
+                bondsArrays.pop(pl)
+            else:
+                pl+=1
+                
+    return atomsLists, bondsArrays, coordsArrays
 
+def load_struct_info(folder, bondsPerMol, sizeCap = -1, moleculesToLoad = []):
+    
+    atomsLists, bondsArrays, coordsArrays = loadMol(folder,sizeCap,moleculesToLoad)
+    distortLists, molNumList = wrapper.allMolDistortions(folder,bondsPerMol,atomsLists, bondsArrays, coordsArrays)
+    elementsLists = wrapper.elementsLists(atomsLists)
+    
+    structInfo = wrapper.ConfigWrapper(distortLists, atomsLists, elementsLists, bondsArrays, coordsArrays) # distortLists, atomsLists, elementsLists, bondsArrays, coordsArrays
+    return structInfo
+    

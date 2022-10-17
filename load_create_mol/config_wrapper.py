@@ -38,9 +38,8 @@ def make1MolDistortions(atoms_list, coords_arry, bonds_arry, numDistort, chosenB
 
     numToDistort = min([numDistort, bonds_arry.shape[0]])
 
-    distortedBonds = [atoms_list, chosenBonds] # contains atoms in the molecule as well as the bonds where distortion occurs
-    distortList = []
- 
+    distortList = [atoms_list, chosenBonds]
+
     for bond in chosenBonds:
 
         chosenAxis = np.random.rand(3)  # chosenAxis will be different for each bond
@@ -57,14 +56,14 @@ def make1MolDistortions(atoms_list, coords_arry, bonds_arry, numDistort, chosenB
             coords_arry, bonds_arry, bond, stretchDist * -1
         )
         distortList += [
-                [
+            [
                 coords_arry,
                 newCoordsBucklePlus,
                 newCoordsBuckleMinus,
                 newCoordsStretchPlus,
                 newCoordsStretchMinus
-                ]
             ]
+        ]
 
     return distortList
 
@@ -87,7 +86,7 @@ def molNumber(path):
     return len(lm.loadMol(path))
 
 
-def allMolDistortions(path,bondsPerMol):
+def allMolDistortions(path, bondsPerMolMax, atomsLists, bondsArrays, coordsArrays):
     """
     
 
@@ -101,16 +100,18 @@ def allMolDistortions(path,bondsPerMol):
     molNumList:     : Number of the molecule referenced by a given distortion.
 
     """
-    atomsLists, bondsArrays, coordsArrays = lm.loadMol(path)
+    # atomsLists, bondsArrays, coordsArrays = lm.loadMol(path,moleculesToLoad)
     
     molNumList=[]
     distortionLists = []
-    distortedBonds = []
     for index in range(len(atomsLists)):
-        
-        # bondsPerMol = (bondsArrays[index].shape[0])//2  # distort half the bonds
+        bondsPerMol=bondsPerMolMax
+        if bondsPerMol >= bondsArrays[index].shape[0]: # do not distort more bonds than there are!
+            bondsPerMol = bondsArrays[index].shape[0]
+            
         chosenBonds = random.sample(
             list(range(bondsArrays[index].shape[0])), bondsPerMol)
+
         distortionLists += [
             make1MolDistortions(
                 atomsLists[index],
@@ -120,12 +121,11 @@ def allMolDistortions(path,bondsPerMol):
                 chosenBonds,
             )
         ]
-        distortedBonds += [[atomsLists[index], chosenBonds]]
         molNumList+=[index]
 
-    return distortionLists, molNumList, distortedBonds
+    return distortionLists, molNumList
 
-def elementsLists (atomsLists): 
+def elementsLists(atomsLists): 
     elementsLists = []
     for molecule in atomsLists:
         elemList = []
