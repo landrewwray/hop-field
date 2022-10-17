@@ -8,8 +8,26 @@ Created on Fri Jun 10 12:05:08 2022
 import numpy as np
 from matplotlib import pyplot as plt
 from math import floor
+from numba.experimental import jitclass
+from numba import int32, float32, float64
 
-class SigmoidCurve:
+import time
+
+spec = [
+    ('sNum', int32),            
+    ('dMin', float64),          
+    ('dMax', float64),
+    ('I_of_r', float64[:]),
+    ('sAmps', float64[:]),
+    ('_sWidth', float64),
+    ('_sStart', float64[:]),
+    ('Ix', float64[:]),
+    ('Imax', float64[:]),
+    ('Imin', float64[:]),
+]
+
+
+cpdef class SigmoidCurve:
     """Class storing a radially-resolved Hamiltonian parameter, framed as the sum of 
     2-parabola sigmoid-like functions.  The functions are defined as:
       -- for the first 1/2 of self._sWidth: 0.5*self.sAmps[pl]*((self._sStart[pl]-dVal)/(self._sWidth/2))**2
@@ -46,7 +64,7 @@ class SigmoidCurve:
     
     """
 
-    def __init__(self, numSigmoids, dMin=0.5, dMax=6):
+    def __init__(self, numSigmoids, dMin=0.5, dMax=6.):
         self.sNum = numSigmoids
         self.dMin = dMin
         self.dMax = dMax
@@ -172,4 +190,15 @@ class SigmoidCurve:
         theCurve = [self.readVal(thePl) for thePl in xVals]
         plt.plot(xVals, theCurve)
 
+
+# start_time=time.time()
+
+# tmp=SigmoidCurve(30)
+# tmp.initAmpsLinear(5)
+# theVal=0.
+# for pl in range(10000):
+#     theVal=tmp.readVal(np.random.rand()*5)
+
+# end_time=time.time()
+# print('Runtime: ' + str(end_time-start_time))
 

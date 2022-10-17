@@ -77,11 +77,19 @@ class Hterm:
     self.curve.make_sAmps() after changing any value. Additionally, permutations should ideally 
     either act on self.curve.sAmps or act on two adjacent self.curve.I_of_r values simultaneously
     
+    self.termType is an integer representing the type of Hamiltonian term referenced:
+    0: single atom
+    1: Coulomb interaction term
+    2: hopping term
+    
     """
     
-    def __init__(self, *args):
+    def __init__(self, *args):        
+        self.element0=args[0] # Acted-on element
+        
         if len(args)==2:          # if it's a single-atom term
-            self.element0=args[0]
+            self.termType=0       # single atom term
+            
             self.element1=None    # just one element!
             self.term=args[1][0]
             self.hop=False        # Not a hopping term
@@ -91,10 +99,13 @@ class Hterm:
             self.max=float(self.term[3])
             self.min=float(self.term[2])
         else:
-            self.element0=args[0] # Acted-on element
             self.element1=args[1] # 2nd element
             self.term=args[2][0]
             self.hop=args[3]      # Is it a hopping term? (True/False)
+            if self.hop:
+                self.termType=2       # hopping term
+            else:
+                self.termType=1       # Coulomb interaction term
             
             self.curve=sc.SigmoidCurve(int(self.term[-1]),float(self.term[-3]),float(self.term[-2]))
             self.curve.initAmpsLinear(float(self.term[-6]))
@@ -104,6 +115,7 @@ class Hterm:
             
             # equialents of self.val, .max and .min are:
             # self.curve.I_of_r, .Imax, .Imin
+
 
 class UniversalModel:
     """stores the following variables: elementList, initList, termsList, orbSyms, electronsPerAtom
@@ -194,7 +206,7 @@ class UniversalModel:
                                 self.maxDist = self.termsList[-1].curve.dMax
                                 
                     #Hopping terms:
-                    if pl2>=pl1:  #avoid double counting
+                    if pl2>=pl1:  #avoid double counting 
                         for nextTerm in hopList:
                             if nextTerm[0]==self.elementList[pl2] or nextTerm[0]=='X':
                                 
@@ -207,11 +219,44 @@ class UniversalModel:
                                         self.maxDist = self.termsList[-1].curve.dMax
                     
                     #***Note!  The 'E' Coulomb terms between different atom types are duplicated
-        self.pruneTermsList
         
-    def pruneTermsList(self):
-        # Remove unnecessary terms from self.termsList - there are still 
-        pass
+        self._pruneTermsList() # Remove double-counted 'E' terms
+        
+        return None
+        
+        
+    def _pruneTermsList(self):
+        """Remove unnecessary terms from self.termsList.  This is currently only needed
+        for 'E' coulomb terms.  Note that extra E terms can be protected by adding a _keep_ 
+        flag in the 2nd term index (e.g.: X _keep_ E -1 -1.5, 0 0.5 10 5])
+        """
+        
+        #1. find "E" terms and make a kill list
+        Einds=[]
+        for pl in range(len(self.termsList)):
+            if self.termsList[pl].term[2] == 'E':
+                Einds += [pl]
+                
+        for pl1 in range(len(Einds)):
+            for pl2 in range(pl1+1,len(Einds)):
+                # Now, if the elements at Einds(pl2) are reversed:
+                if [self.termsList[Einds[pl1]].element0, self.termsList[Einds[pl1]].element1] == [self.termsList[Einds[pl2]].element1, self.termsList[Einds[pl2]].element0]:
+                    if self.termsList[Einds[pl2]].term[1] != '_keep_':  # kill the term if it's not labeled _keep_
+                        self.termsList.pop(Einds[pl2]) 
+                
+        return None
+    
+    def popHs(self, elementName = 'H', orbName = 's'):
+        """Eliminates one orbital (defaulting to Hydrogen s) to lift the scalar shift
+        degree of freedom for orbital energies.
+        """
+        for pl in range(len(self.termsList)):
+            if self.termsList[pl].termType == 0:
+                if (self.termsList[pl].element0 == elementName) and (self.termsList[pl].term[0] == orbName):
+                    self.termsList.pop(pl)
+                    
+                    break
+        
     
     def getOrbSymNum(self,elementName,orbName):
         #get the index of an orbital type for a specific element (the 's' and 'p' orbitals of C have indices 0 and 1)
@@ -224,7 +269,15 @@ class UniversalModel:
                         return orbNum
         
         return None
-                
+    
+    def countElectrons(self, molElementList):
+        elNum=0
+        
+        for elementPl in range(len(self.elementList)):
+            elementName = self.elementList[elementPl]
+            elNum += np.where(np.asarray(molElementList) == elementName)[0].shape[0] * self.electronsPerAtom[elementPl]
+            
+        return elNum
 
 # theUM = UniversalModel(['C','Cinit_0.txt'])
 # theUM += UniversalModel(['H','Hinit_0.txt'])  # define __add__ appropriately
