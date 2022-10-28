@@ -11,6 +11,7 @@ Created on Tue Oct 11 16:58:39 2022
 """
 
 import matplotlib.pyplot as plt
+import random
 import pickle
 import numpy as np
 
