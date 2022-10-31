@@ -56,7 +56,7 @@ dataSize = 5
 # input_shape = (60000, 20, 10, 1)
 input_shape = (len(mc_data.trainingData.X), len(mc_data.trainingData.X[0]), mc_data.trainingData.X[0][0].size, len(mc_data.trainingData.y))
 output_length = 10*5*2 # (10 molecules * 5 bonds * 2 distortions) -- effective bond number will sometimes be lower
-x =[mc_data.trainingData.X, len(mc_data.trainingData.y)]
+x =[mc_data.trainingData.X, mc_data.trainingData.y]
 
 def make_discriminator_model():
     """Notes: momentum for training?  Can/should batch normalization be applied more regularly?
