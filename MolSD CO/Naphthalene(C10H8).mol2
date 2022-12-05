@@ -1,0 +1,49 @@
+####################################################################### 
+# 
+# This file contains crystal structure data downloaded from the 
+# Cambridge Structural Database (CSD) hosted by the Cambridge 
+# Crystallographic Data Centre (CCDC).
+# 
+# Full information about CCDC data access policies and citation 
+# guidelines are available at http://www.ccdc.cam.ac.uk/access/V1 
+# 
+# Audit and citation data items may have been added by the CCDC. 
+# Please retain this information to preserve the provenance of 
+# this file and to allow appropriate attribution of the data. 
+# 
+#######################################################################
+@<TRIPOS>MOLECULE
+1216817
+    10    11     1     0     0
+SMALL
+NO_CHARGES
+****
+Generated from the CSD
+
+@<TRIPOS>ATOM
+     1 C1      -0.8248   0.1117   2.3628   C.2       1 RES1   0.0000
+     2 C2      -1.2912  -1.1220   1.8467   C.2       1 RES1   0.0000
+     3 C3      -0.0898   0.9533   1.5989   C.2       1 RES1   0.0000
+     4 C4      -0.9857  -1.4833   0.5698   C.2       1 RES1   0.0000
+     5 C5       0.2235   0.6153   0.2551   C.2       1 RES1   0.0000
+     6 C5B     -0.2235  -0.6153  -0.2551   C.2       1 RES1   0.0000
+     7 C4B      0.9857   1.4833  -0.5698   C.2       1 RES1   0.0000
+     8 C3B      0.0898  -0.9533  -1.5989   C.2       1 RES1   0.0000
+     9 C2B      1.2912   1.1220  -1.8467   C.2       1 RES1   0.0000
+    10 C1B      0.8248  -0.1117  -2.3628   C.2       1 RES1   0.0000
+@<TRIPOS>BOND
+     1     1     2    1
+     2     2     4    2
+     3     3     1    2
+     4     4     6    1
+     5     5     3    1
+     6     6     5    2
+     7     7     5    1
+     8     8     6    1
+     9     9     7    2
+    10    10     8    2
+    11     9    10    1
+@<TRIPOS>SUBSTRUCTURE
+     1 RES1        1 GROUP             0 ****  ****    0  
+@<TRIPOS>CRYSIN
+    8.2350    6.0030    8.6580   90.0000  122.9200   90.0000    14     2

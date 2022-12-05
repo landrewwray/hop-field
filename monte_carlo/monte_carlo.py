@@ -48,8 +48,14 @@ def randUpdate(termCurves,termNums,isSingleAtom):
         
     return newTermCurve, newTermNum, selectedTerm
     
-def posToEnergy(posVect, testLists=[]):
-    #convert a position vector to an energy for Monte Carlo
+def posToEnergy(posVect, testLists=[], optimizeAll=False):
+    """Convert a position vector to a Monte Carlo 'energy' for evaluating steps.
+    
+    If optimizeAll=False, then only posList coordinates listed in testLists[0]
+    will contribute to the Monte Carlo evaluation.  Otherwise,  all of the 
+    testLists will be summed over for the MC energy (newEnergy).
+    """
+    
     if len(testLists) == 0:  # dummy init:
         testLists = [np.asarray(range(len(posVect)), dtype=np.int32)]
     
@@ -59,17 +65,38 @@ def posToEnergy(posVect, testLists=[]):
     
     listNum=0
     trackedEnergies = np.zeros(len(testLists))
+    angle_length_error = np.zeros((2,len(testLists)))
+    
     for trackedList in testLists:
         trackedEnergies += [0]
         
+        numLen=0
+        numAng=0
         normVal=1/(maxDisplacement)
         for posPl in trackedList:
             trackedEnergies[listNum] += posTmp[posPl]
-        trackedEnergies[listNum] *= normVal
+            if posPl%2 == 0:  #angle error
+                angle_length_error[0, listNum] += posTmp[posPl]*0.02*180/np.pi  # error in degrees, approximating
+                numAng += 1                                                  # a bond length of 1
+            else:
+                angle_length_error[1, listNum] += posTmp[posPl]*0.01  # error in Angstroms
+                numLen += 1
+
+        # now normalize and increment listNum:
+        trackedEnergies[listNum] *= normVal        
+        if numAng>0:
+            angle_length_error[0,listNum] /= numAng
+        if numLen>0:
+            angle_length_error[1,listNum] /= numLen
         
         listNum+=1
+
+    if optimizeAll:
+        newEnergy = sum(trackedEnergies)
+    else:
+        newEnergy = trackedEnergies[0]
     
-    return trackedEnergies[0], trackedEnergies
+    return newEnergy, trackedEnergies, angle_length_error
 
 
 def getEnergy(hmat, numElectrons):
@@ -244,7 +271,8 @@ def undoStep(hmatList, mcLists, valList, termNums, termCurves, oldValList, oldTe
     mkh.addTermHmatMEs(selectedTerm, hmatList, valList, oldValList, mcLists)
 
 def generateTval(hmatList, valList, oldValList, termCurves, termNums, mcLists,samplesPerTrial, numSteps = 20):
-    
+    """ Not currently in use.  Please disregard this function.
+    """
     # first obtain the position vector for hmatList (list of float64)
     # infinities should be avoided...
     
@@ -327,13 +355,15 @@ def makeMolTestLists(test1mc0, mcLists):
 
     return testLists
 
-def runMonteCarlo(convergenceCycles, Tval, temperatureStages, decayPerT, stepsPerT, hmatList, valList, oldValList, termCurves, termNums, mcLists, testLists = []):
+def runMonteCarlo(convergenceCycles, Tval, temperatureStages, decayPerT, stepsPerT, hmatList, valList, oldValList, termCurves, termNums, mcLists, testLists = [], optimizeAll=False):
     """Runs a Monte Carlo simulated annealing exploration of the universal model parameter space.
     
     Note that floating point error in each element of posVect accumulates at a rate of ~10**-12 in 1500 
     attempted steps with 20 terms. This can be fixed by re-initializing the Hamiltonian with
     mkh.makeAllHmats(mcLists, termCurves), but it is very unlikely to be relevant. (should grow as 
     sqrt(steps))
+    
+    Use testLists and optimizeAll=False to separate training and test scenarios.
     """
 
     
@@ -343,7 +373,7 @@ def runMonteCarlo(convergenceCycles, Tval, temperatureStages, decayPerT, stepsPe
     print(posVect)
     
     # translate position vector into an 'energy'. This will define the maximum position
-    energyStart, trackedEnergies = posToEnergy(posVect, testLists)
+    energyStart, trackedEnergies, angle_length_error = posToEnergy(posVect, testLists,optimizeAll)
     print('energyStart')
     print(energyStart)
 
@@ -352,6 +382,7 @@ def runMonteCarlo(convergenceCycles, Tval, temperatureStages, decayPerT, stepsPe
     vectHist = [copy.deepcopy(posVect)]
     energyHist = [copy.copy(energyStart)]
     trackedEnergyHist=[trackedEnergies]
+    angle_length_errorHist = [angle_length_error]         
 
     energyList = [energyStart]
     goodMoves = [1] # count the initial state as a 'good move'
@@ -368,7 +399,7 @@ def runMonteCarlo(convergenceCycles, Tval, temperatureStages, decayPerT, stepsPe
                 # print('newPosVect')
                 # print(posVect)
                 
-                newEnergy, trackedEnergies = posToEnergy(posVect,testLists)
+                newEnergy, trackedEnergies, angle_length_error = posToEnergy(posVect,testLists,optimizeAll)
                 
                 # print('newEnergy (' + str(pl) + '):')
                 # print(newEnergy)
@@ -378,6 +409,7 @@ def runMonteCarlo(convergenceCycles, Tval, temperatureStages, decayPerT, stepsPe
                 vectHist += [copy.deepcopy(posVect)]
                 energyHist += [copy.copy(newEnergy)]
                 trackedEnergyHist += [trackedEnergies]
+                angle_length_errorHist += [angle_length_error]      
                 
                 expFact=-(newEnergy - energyList[-1])/TvalNow
                 if abs(expFact)>20:  #avoid exp overflow error
@@ -399,8 +431,9 @@ def runMonteCarlo(convergenceCycles, Tval, temperatureStages, decayPerT, stepsPe
     
     mc_path = [termHist,vectHist,energyHist]
     trackedEnergyHist=np.asarray(trackedEnergyHist)
+    angle_length_errorHist=np.asarray(angle_length_errorHist)
     
-    mc_data = smc.MonteCarloOutput(energyList, goodMoves, mc_path, trackedEnergyHist)
+    mc_data = smc.MonteCarloOutput(energyList, goodMoves, mc_path, trackedEnergyHist, angle_length_errorHist)
     
     return mc_data
 

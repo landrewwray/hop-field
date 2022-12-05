@@ -191,6 +191,7 @@ class SymTerms:
             
         # *** Now convert to a sparse matrix and add the correct index for thePair[0] and indexOrb from self.hmatIndex
         indexOrbRow=orbSym[1][0] # turn 'sp' into 's' for indexing purposes
+        
         orbitalRow = self.UM.getOrbSymNum(theConfigsWrapper.elementsLists[molPl][thePair[0]], indexOrbRow) # default for 's' orbital
         indexOrbCol=orbSym[2][0] # turn 'sp' into 's' for indexing purposes
         orbitalCol = self.UM.getOrbSymNum(theConfigsWrapper.elementsLists[molPl][thePair[1]], indexOrbCol) # default for 's' orbital
@@ -198,6 +199,7 @@ class SymTerms:
         
         # note that the above has used 'row' to indicate the column indices within a row,
         # which is reversed relative to the coo convention:
+
         theMatSparse.col += self.hmatIndex[molPl][thePair[0]][orbitalRow] # sparse matrix elements with corrected row and column indices based on atom and orbital
         theMatSparse.row += self.hmatIndex[molPl][thePair[1]][orbitalCol]
         theMatSparse.resize((self.hmatIndex[molPl][-1],self.hmatIndex[molPl][-1]))
@@ -425,7 +427,9 @@ class SymTerms:
                         atomInds += [indexPl]
                         indexPl += orbital[1]
                     break # found the element in the UM
-                    
+            
+            # print('here')
+            # print(atom)
             molOrbsIndexList += [atomInds]
         
         molOrbsIndexList += [indexPl]   # molOrbsIndexList[-1] is the dimensionality of the Hamiltonia

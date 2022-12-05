@@ -21,14 +21,17 @@ import monte_carlo.decant_terms as dec
 #### 1. code to load and create molecule --> molConfigList  ####
 ################################################################
 
-molFilePath="Molecular Structure Data/*.mol2"
+# molFilePath="Molecular Structure Data/*.mol2"
+molFilePath="MolSD CNO/*.mol2"
 bondsPerMol=5 # Number of bonds to distort in each molecule (if enough bonds exist)
 moleculesToLoad=[]  # use [] to load all molecules, and 0 entries
                         # to not load a particular molecule
-sizeCap=20  # Only load molecules with <=sizeCap atoms. Set to sizeCap<=0 to disable
+sizeCap=35  # Only load molecules with <=sizeCap atoms. Set to sizeCap<=0 to disable
             # this filter
 
-structInfo = load_mol.load_struct_info(molFilePath,bondsPerMol,sizeCap, moleculesToLoad)
+makeNewDistortions = True
+if makeNewDistortions:
+    structInfo = load_mol.load_struct_info(molFilePath,bondsPerMol,sizeCap, moleculesToLoad)
 # configs contains: atomsLists, bondsArrays, coordsArrays, distortLists, molNumList, elementsLists
 
 ################################################################
@@ -37,8 +40,14 @@ structInfo = load_mol.load_struct_info(molFilePath,bondsPerMol,sizeCap, molecule
 
 theUM = um.UniversalModel(['C','Cinit_0.txt'])
 theUM += um.UniversalModel(['H','Hinit_0.txt'])  
+theUM += um.UniversalModel(['O','Oinit_0.txt'])
+
 theUM.makeCrossTerms(['all'],'Hop_generic0.txt')
 theUM.popHs() # remove the hydrogen s-orbital to eliminate the scalar shift degree of freedom
+
+
+# theUM.popHop()     # eliminate all hopping terms (classical 2-body model!)
+# theUM.popHop('H')  # eliminate just hopping to/from Hydrogen atoms
 
 
 ################################################################
@@ -114,7 +123,7 @@ wrapper contains:
 mcLists = stitch.make_monte_carlo_lists(symMats)
 mcLists.theUM = theUM
 mcLists.numElectrons = [theUM.countElectrons(elList) for elList in structInfo.elementsLists]
-
+mcLists.molNames = structInfo.molNames
 
 saveName += '2'
 with open(saveName, "wb") as f:

@@ -212,12 +212,16 @@ class UniversalModel:
                                 
                                 orbSyms1=np.asarray(self.orbSyms[pl1])[:,0]
                                 orbSyms2=np.asarray(self.orbSyms[pl2])[:,0]
-                                if ((nextTerm[2] in orbSyms1) and (nextTerm[3] in orbSyms2)) or ((nextTerm[2] in orbSyms2) and (nextTerm[3] in orbSyms1)):
+                                if ((nextTerm[2] in orbSyms1) and (nextTerm[3] in orbSyms2)):
                                     self.termsList += [Hterm(self.elementList[pl1],self.elementList[pl2],[nextTerm],True)]
                                     
                                     if self.termsList[-1].curve.dMax > self.maxDist: #keep track of the maximum interaction distance
                                         self.maxDist = self.termsList[-1].curve.dMax
-                    
+                                elif ((nextTerm[2] in orbSyms2) and (nextTerm[3] in orbSyms1)):
+                                    self.termsList += [Hterm(self.elementList[pl2],self.elementList[pl1],[nextTerm],True)]
+                                    
+                                    if self.termsList[-1].curve.dMax > self.maxDist: #keep track of the maximum interaction distance
+                                        self.maxDist = self.termsList[-1].curve.dMax
                     #***Note!  The 'E' Coulomb terms between different atom types are duplicated
         
         self._pruneTermsList() # Remove double-counted 'E' terms
@@ -256,7 +260,29 @@ class UniversalModel:
                     self.termsList.pop(pl)
                     
                     break
+    
+    def popHop(self, elementName = 'X', verbose = True):
+        """Removes all hopping terms from the Hamiltonian to yield a classical 
+        2-body model. If 'elementName' is specified, then only hopping involving
+        that element will be removed.
+        """
+        if verbose:
+            if elementName == 'X':
+                print('UniversalModel.popHop(): Eliminating all hopping terms!')
+            else:
+                print(f'UniversalModel.popHop({elementName}): Eliminating all hopping with element: {elementName}')
         
+        pl=0
+        while pl < len(self.termsList):
+            if self.termsList[pl].hop == True:
+                if elementName != 'X':
+                    if (self.termsList[pl].element0 == elementName) or (self.termsList[pl].element1 == elementName):
+                        self.termsList.pop(pl)
+                        pl-=1
+                else:
+                    self.termsList.pop(pl)
+                    pl-=1
+            pl+=1
     
     def getOrbSymNum(self,elementName,orbName):
         #get the index of an orbital type for a specific element (the 's' and 'p' orbitals of C have indices 0 and 1)
