@@ -6,11 +6,11 @@ Proof of principle implementation of a 'tight binding field' model for molecular
 
 The software uses Monte Carlo to 
 
-Limited development work has gone into testing the predictive power of a convolutional neural network (CNN) discriminator to emulate the model for specific molecules, and exploring alternatives to Monte Carlo for convergence (such as GFlowNet).
+Limited development work has gone into testing the predictive power of a convolutional neural network (1D CNN) discriminator to emulate the model for specific molecules (see run_ai.py), and exploring alternatives to Monte Carlo for convergence (such as GFlowNet).
 
 ## Results
 
-
+A sample of the results can be found in 
 
 
 
