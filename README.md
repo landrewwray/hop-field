@@ -8,12 +8,11 @@ The software uses Monte Carlo to optimize the field parameters based on experime
 
 ## Results
 
-A quick overview of initial results from the code can be found in the 'Summary' PDF.  Key takeaways are:
+A quick overview of some demo results from the code can be found in the 'Summary' PDF.  Key takeaways are:
 1. Bond length accuracy is comparable to density functional theory (DFT), and there is significant room for improvement.
-2. 
+2. Disabling the hopping terms dramatically reduces the accuracy of the model for test molecules that it has not been trained on.  In this scenario, the model can still parse distinctions between single and double bonds, but no longer has knowledge of quantum mechanics.
 3. The Numba-optimized Monte Carlo loop runs far faster than DFT, and should also be intrinsically faster than simplified SE-DFT algorithms.
 This modeling approach is expected to be faster than any DFT (or simplified SE-DFT) algorithm.
-
 
 ## Running the code
 
