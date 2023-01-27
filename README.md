@@ -8,6 +8,8 @@ The software uses Monte Carlo to optimize the field parameters based on experime
 
 ## Results
 
+![Convergence with and without hopping fields](Convergence_no_hopping.png)
+
 A quick overview of some demo results from the code can be found in the 'Summary' PDF.  Key takeaways are:
 1. Bond length accuracy is comparable to density functional theory (DFT), and there is significant room for improvement.
 2. Disabling the hopping terms dramatically reduces the accuracy of the model for test molecules that it has not been trained on.  In this scenario, the model can still parse distinctions between single and double bonds, but no longer has knowledge of quantum mechanics.
