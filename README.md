@@ -8,7 +8,7 @@ The software uses Monte Carlo to optimize the field parameters based on experime
 
 ## Results
 
-![Convergence with and without hopping fields](Convergence_no_hopping.png | width=20)
+![Convergence with and without hopping fields](Convergence_no_hopping.png)
 
 A quick overview of some demo results from the code can be found in the 'Summary' PDF.  Key takeaways are:
 1. Bond length accuracy is comparable to density functional theory (DFT), and there is significant room for improvement.
