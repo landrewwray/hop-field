@@ -3,7 +3,6 @@
 """
 Created on Wed Oct 19 11:55:19 2022
 
-@author: lawray
 """
 
 import tensorflow as tf
