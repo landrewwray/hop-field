@@ -3,6 +3,8 @@
 """
 Created on Tue Jun 14 07:03:08 2022
 
+@author: @landrewwray and Daniel Thomas
+
 This code defines the molecules, model parameters, and bond distortions, and uses
 these to create hamiltonian symmetry factors.
 
