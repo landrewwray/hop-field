@@ -3,7 +3,7 @@
 """
 Created on Fri Aug 12 22:10:56 2022
 
-@author: lawray
+@author: @landrewwray and Daniel Thomas
 
 Monte Carlo-based data generator for the model defined in model_creation
 
